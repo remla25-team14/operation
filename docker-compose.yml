@@ -1,0 +1,35 @@
+services:
+  # Frontend + Backend App
+  app:
+    build:
+      context: ../app
+      dockerfile: Dockerfile
+      args:
+        APP_VERSION: ${APP_VERSION:-development}
+    ports:
+      - "5001:5001"
+    environment:
+      - MODEL_SERVICE_URL=http://model-service:5000
+      - APP_VERSION=${APP_VERSION:-development}
+    depends_on:
+      - model-service
+    restart: unless-stopped
+
+  # Model Service
+  model-service:
+    build:
+      context: ../model-service
+      dockerfile: Dockerfile
+    ports:
+      - "5002:5000"
+    environment:
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+      - OWNER_REPO=remla25-team14/model-training
+      - ARTIFACT_ID=3053668556
+      - PORT=5000
+    volumes:
+      - model-cache:/app/model_cache
+    restart: unless-stopped
+
+volumes:
+  model-cache:  
