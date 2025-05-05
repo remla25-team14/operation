@@ -11,6 +11,7 @@ This project consists of the following repositories:
 - [`lib-ml`](https://github.com/remla25-team14/lib-ml): Shared preprocessing logic used by both training and model-service.
 - [`model-training`](https://github.com/remla25-team14/model-training): Trains the sentiment classifier and uploads the model artifact.
 - [`model-service`](https://github.com/remla25-team14/model-service): Exposes a REST API to analyze restaurant reviews using the trained model.
+- [`lib-version`](https://github.com/remla25-team14/lib-version): Provides a shared utility to expose version information from a `VERSION` file, used by the app to return its version dynamically.
 - [`app`](https://github.com/remla25-team14/app): Web interface (React frontend + Flask backend) that interacts with the model service.
 - [`operation`](https://github.com/remla25-team14/operation): This repo; integrates and launches all components.
 
