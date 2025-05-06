@@ -1,17 +1,29 @@
 #!/bin/bash
-# Read version from VERSION file
-export APP_VERSION=$(cat ../app/VERSION)
-echo "Using App Version: $APP_VERSION"
 
-# Check if GITHUB_TOKEN is set
-if [ -z "$GITHUB_TOKEN" ]; then
-  echo "WARNING: GITHUB_TOKEN environment variable is not set."
-  echo "The model service might not be able to download model artifacts."
-  echo "Set it with: export GITHUB_TOKEN=your_github_token"
+echo "Starting Sentiment Analysis Application..."
+echo "----------------------------------------"
+
+# Check for Docker
+if ! command -v docker &> /dev/null; then
+    echo "Error: Docker is not installed or not in PATH"
+    exit 1
 fi
 
-docker-compose down && docker-compose up --build -d
+# Check for docker-compose
+if ! command -v docker-compose &> /dev/null; then
+    echo "Error: docker-compose is not installed or not in PATH"
+    exit 1
+fi
 
-echo "Application started!"
-echo "- Frontend+Backend: http://localhost:5001"
-echo "- Model Service: http://localhost:5002" 
+# Check for GitHub token in secrets
+if [ ! -f "./secrets/github_token.txt" ]; then
+    echo "Warning: GitHub token file not found"
+    echo "Creating placeholder file in secrets/github_token.txt"
+    echo "Please replace with your actual GitHub token before using the model service"
+    mkdir -p secrets
+    echo "your_github_token_here" > secrets/github_token.txt
+fi
+
+# Start the application
+echo "Launching services..."
+docker-compose up 

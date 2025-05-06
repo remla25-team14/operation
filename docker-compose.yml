@@ -1,6 +1,7 @@
 services:
   # Frontend + Backend App
   app:
+    image: ${APP_IMAGE:-ghcr.io/remla25-team14/app:latest}
     build:
       context: ../app
       dockerfile: Dockerfile
@@ -17,19 +18,25 @@ services:
 
   # Model Service
   model-service:
+    image: ${MODEL_SERVICE_IMAGE:-ghcr.io/remla25-team14/model-service:latest}
     build:
       context: ../model-service
       dockerfile: Dockerfile
-    ports:
-      - "5002:5000"
+    expose:
+      - "5000"
     environment:
-      - GITHUB_TOKEN=${GITHUB_TOKEN}
-      - OWNER_REPO=remla25-team14/model-training
-      - ARTIFACT_ID=3053668556
+      - OWNER_REPO=${OWNER_REPO:-remla25-team14/model-training}
+      - ARTIFACT_ID=${ARTIFACT_ID:-3053668556}
       - PORT=5000
+    secrets:
+      - github_token
     volumes:
       - model-cache:/app/model_cache
     restart: unless-stopped
 
 volumes:
   model-cache:  
+
+secrets:
+  github_token:
+    file: ./secrets/github_token.txt  
