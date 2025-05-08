@@ -61,14 +61,14 @@
         name: containerd
         state: restarted
 
-    - name: Disable swap
-      shell: swapoff -a
+    - name: Disable swap for running system
+      ansible.builtin.shell: swapoff -a
       
-    - name: Remove swap from fstab
-      replace:
+    - name: Remove swap entries from /etc/fstab
+      ansible.builtin.lineinfile:
         path: /etc/fstab
-        regexp: '^([^#].*\sswap\s.*)$'
-        replace: '# \1'
+        regexp: '.*\sswap\s.*'
+        state: absent
         
     - name: Enable bridged traffic
       sysctl:
