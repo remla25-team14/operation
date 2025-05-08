@@ -25,4 +25,3 @@
         key: "{{ lookup('file', playbook_dir + '/public_keys/' + item) }}"
       with_items:
         - member1
-        - ilma 
