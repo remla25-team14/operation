@@ -13,7 +13,7 @@ Vagrant.configure("2") do |config|
       v.cpus = 1       
     end
 
-    # Provision controller node with Ansible
+    # provision controller node with ansible
     ctrl.vm.provision "ansible_local" do |ansible|
       ansible.playbook = "ansible/general.yaml"
       ansible.inventory_path = "ansible/inventory.ini"
@@ -37,14 +37,12 @@ Vagrant.configure("2") do |config|
         v.cpus = 2       
       end
 
-      # Provision worker nodes with Ansible
       node.vm.provision "ansible_local" do |ansible|
         ansible.playbook = "ansible/general.yaml"
         ansible.inventory_path = "ansible/inventory.ini"
         ansible.limit = "all"
       end
 
-      # Only run worker playbook on the last node to ensure controller is ready
       if i == WORKER_COUNT
         node.vm.provision "ansible_local" do |ansible|
           ansible.playbook = "ansible/worker.yaml"
@@ -60,9 +58,15 @@ Vagrant.configure("2") do |config|
     v.linked_clone = true
   end
 
-  # Ensure Ansible is installed on all VMs
   config.vm.provision "shell", inline: <<-SHELL
     apt-get update
     apt-get install -y ansible
   SHELL
+
+  # register ssh keys on the vm's
+  config.vm.provision "ansible_local" do |ansible|
+    ansible.playbook = "ansible/ssh_keys.yaml"
+    ansible.inventory_path = "ansible/inventory.ini"
+    ansible.limit = "all"
+  end
 end 

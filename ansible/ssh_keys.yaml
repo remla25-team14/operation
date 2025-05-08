@@ -1,0 +1,28 @@
+---
+- hosts: all
+  become: true
+  collections:
+    - ansible.posix
+  tasks:
+    - name: Install required collection
+      shell: ansible-galaxy collection install ansible.posix
+      delegate_to: localhost
+      run_once: true
+      changed_when: false
+
+    - name: Ensure .ssh directory exists
+      file:
+        path: "/home/vagrant/.ssh"
+        state: directory
+        owner: vagrant
+        group: vagrant
+        mode: '0700'
+
+    - name: Add SSH public keys
+      ansible.posix.authorized_key:
+        user: vagrant
+        state: present
+        key: "{{ lookup('file', playbook_dir + '/public_keys/' + item) }}"
+      with_items:
+        - member1
+        - ilma 
