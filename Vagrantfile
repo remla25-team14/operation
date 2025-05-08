@@ -6,7 +6,7 @@ Vagrant.configure("2") do |config|
 
   config.vm.define "ctrl" do |ctrl|
     ctrl.vm.hostname = "ctrl"
-    ctrl.vm.network "private_network", ip: "192.168.56.10"
+    ctrl.vm.network "private_network", ip: "192.168.56.100"
     
     ctrl.vm.provider "virtualbox" do |v|
       v.memory = 4096  
@@ -16,7 +16,7 @@ Vagrant.configure("2") do |config|
   (1..WORKER_COUNT).each do |i|
     config.vm.define "node-#{i}" do |node|
       node.vm.hostname = "node-#{i}"
-      node.vm.network "private_network", ip: "192.168.56.#{10 + i}"
+      node.vm.network "private_network", ip: "192.168.56.#{100 + i}"
       
       node.vm.provider "virtualbox" do |v|
         v.memory = 6144  
