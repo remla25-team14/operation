@@ -1,0 +1,24 @@
+---
+- hosts: node*
+  become: true
+  tasks:
+    - name: Fetch join command from controller
+      fetch:
+        src: /home/vagrant/join-command.sh
+        dest: /tmp/join-command.sh
+        flat: yes
+      delegate_to: ctrl
+      run_once: true
+      
+    - name: Copy join command to worker node
+      copy:
+        src: /tmp/join-command.sh
+        dest: /home/vagrant/join-command.sh
+        mode: '0755'
+        owner: vagrant
+        group: vagrant
+        
+    - name: Join the cluster
+      shell: /home/vagrant/join-command.sh
+      args:
+        creates: /etc/kubernetes/kubelet.conf 

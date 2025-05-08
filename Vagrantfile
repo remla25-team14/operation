@@ -12,7 +12,21 @@ Vagrant.configure("2") do |config|
       v.memory = 4096  
       v.cpus = 1       
     end
+
+    # Provision controller node with Ansible
+    ctrl.vm.provision "ansible_local" do |ansible|
+      ansible.playbook = "ansible/general.yaml"
+      ansible.inventory_path = "ansible/inventory.ini"
+      ansible.limit = "all"
+    end
+
+    ctrl.vm.provision "ansible_local" do |ansible|
+      ansible.playbook = "ansible/ctrl.yaml"
+      ansible.inventory_path = "ansible/inventory.ini"
+      ansible.limit = "ctrl"
+    end
   end
+
   (1..WORKER_COUNT).each do |i|
     config.vm.define "node-#{i}" do |node|
       node.vm.hostname = "node-#{i}"
@@ -22,10 +36,33 @@ Vagrant.configure("2") do |config|
         v.memory = 6144  
         v.cpus = 2       
       end
+
+      # Provision worker nodes with Ansible
+      node.vm.provision "ansible_local" do |ansible|
+        ansible.playbook = "ansible/general.yaml"
+        ansible.inventory_path = "ansible/inventory.ini"
+        ansible.limit = "all"
+      end
+
+      # Only run worker playbook on the last node to ensure controller is ready
+      if i == WORKER_COUNT
+        node.vm.provision "ansible_local" do |ansible|
+          ansible.playbook = "ansible/worker.yaml"
+          ansible.inventory_path = "ansible/inventory.ini"
+          ansible.limit = "node*"
+        end
+      end
     end
   end
+
   config.vm.provider "virtualbox" do |v|
     v.gui = false
     v.linked_clone = true
   end
+
+  # Ensure Ansible is installed on all VMs
+  config.vm.provision "shell", inline: <<-SHELL
+    apt-get update
+    apt-get install -y ansible
+  SHELL
 end 

@@ -1,0 +1,43 @@
+---
+- hosts: ctrl
+  become: true
+  tasks:
+    - name: Initialize Kubernetes cluster
+      shell: kubeadm init --apiserver-advertise-address=192.168.56.100 --pod-network-cidr=10.244.0.0/16
+      args:
+        creates: /etc/kubernetes/admin.conf
+
+    - name: Create .kube directory for vagrant user
+      file:
+        path: /home/vagrant/.kube
+        state: directory
+        owner: vagrant
+        group: vagrant
+        mode: '0755'
+
+    - name: Copy admin.conf to vagrant user's .kube directory
+      copy:
+        src: /etc/kubernetes/admin.conf
+        dest: /home/vagrant/.kube/config
+        remote_src: yes
+        owner: vagrant
+        group: vagrant
+        mode: '0644'
+
+    - name: Install Flannel network plugin
+      become: false
+      shell: kubectl apply -f https://raw.githubusercontent.com/flannel-io/flannel/master/Documentation/kube-flannel.yml
+      args:
+        chdir: /home/vagrant
+
+    - name: Generate join command
+      shell: kubeadm token create --print-join-command
+      register: join_command
+
+    - name: Save join command to file
+      copy:
+        content: "{{ join_command.stdout_lines[0] }}"
+        dest: /home/vagrant/join-command.sh
+        mode: '0755'
+        owner: vagrant
+        group: vagrant 
