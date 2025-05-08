@@ -18,6 +18,9 @@ Vagrant.configure("2") do |config|
       ansible.playbook = "ansible/general.yaml"
       ansible.inventory_path = "ansible/inventory.ini"
       ansible.limit = "all"
+      ansible.extra_vars = {
+        worker_count: WORKER_COUNT
+      }
     end
 
     ctrl.vm.provision "ansible_local" do |ansible|
@@ -41,6 +44,9 @@ Vagrant.configure("2") do |config|
         ansible.playbook = "ansible/general.yaml"
         ansible.inventory_path = "ansible/inventory.ini"
         ansible.limit = "all"
+        ansible.extra_vars = {
+          worker_count: WORKER_COUNT
+        }
       end
 
       if i == WORKER_COUNT
@@ -48,6 +54,13 @@ Vagrant.configure("2") do |config|
           ansible.playbook = "ansible/worker.yaml"
           ansible.inventory_path = "ansible/inventory.ini"
           ansible.limit = "node*"
+        end
+        
+        # register ssh keys on the vm's (moved to after all nodes are created)
+        node.vm.provision "ansible_local" do |ansible|
+          ansible.playbook = "ansible/ssh_keys.yaml"
+          ansible.inventory_path = "ansible/inventory.ini"
+          ansible.limit = "all"
         end
       end
     end
@@ -62,11 +75,4 @@ Vagrant.configure("2") do |config|
     apt-get update
     apt-get install -y ansible
   SHELL
-
-  # register ssh keys on the vm's
-  config.vm.provision "ansible_local" do |ansible|
-    ansible.playbook = "ansible/ssh_keys.yaml"
-    ansible.inventory_path = "ansible/inventory.ini"
-    ansible.limit = "all"
-  end
 end 

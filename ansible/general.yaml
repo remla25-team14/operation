@@ -18,48 +18,83 @@
           - software-properties-common
         state: present
 
-    - name: Add Docker GPG key
-      apt_key:
-        url: https://download.docker.com/linux/ubuntu/gpg
-        state: present
-
-    - name: Add Docker repository
-      apt_repository:
-        repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable
-        state: present
-
-    - name: Install Docker
-      apt:
+    # Install container runtime (Step 10)
+    - name: Install containerd.io and runc with specific versions
+      ansible.builtin.apt:
         name:
-          - docker-ce
-          - docker-ce-cli
-          - containerd.io
+          - containerd.io=1.7.24*
+          - runc=1.1.12*
         state: present
 
-    - name: Add user to Docker group
-      user:
-        name: vagrant
-        groups: docker
-        append: yes
+    # Update /etc/hosts for all nodes (Step 8) - Template approach
+    - name: Ensure templates directory exists
+      ansible.builtin.file:
+        path: "{{ playbook_dir }}/templates"
+        state: directory
+        mode: '0755'
+      delegate_to: localhost
+      run_once: true
+      changed_when: false
+      
+    - name: Update /etc/hosts file with all cluster nodes
+      ansible.builtin.template:
+        src: templates/hosts.j2
+        dest: /etc/hosts
+        owner: root
+        group: root
+        mode: '0644'
+        backup: yes
+      vars:
+        worker_count: "{{ worker_count | default(2) }}"
 
+    # Start of containerd configuration (Step 11)
     - name: Create containerd directory
       file:
         path: /etc/containerd
         state: directory
+        mode: '0755'
 
-    - name: Configure containerd
-      shell: containerd config default | tee /etc/containerd/config.toml
+    - name: Generate default containerd config
+      shell: containerd config default > /etc/containerd/config.toml
+      args:
+        creates: /etc/containerd/config.toml
 
-    - name: Update containerd configuration for Kubernetes
-      replace:
+    # NOTE: Using backrefs to preserve indentation and formatting in the TOML file
+    - name: Ensure AppArmor is disabled in containerd config
+      ansible.builtin.lineinfile:
         path: /etc/containerd/config.toml
-        regexp: 'SystemdCgroup = false'
-        replace: 'SystemdCgroup = true'
+        regexp: '^(\s+)disable_apparmor = false'
+        line: '\1disable_apparmor = true'
+        backrefs: yes
+        owner: root
+        group: root
+        mode: '0644'
+        
+    # NOTE: Matching the existing line regardless of current image version
+    - name: Ensure correct sandbox image is set for Kubernetes
+      ansible.builtin.lineinfile:
+        path: /etc/containerd/config.toml
+        regexp: '^(\s+)sandbox_image = ".*"'
+        line: '\1sandbox_image = "registry.k8s.io/pause:3.10"'
+        backrefs: yes
+        # Use backrefs with regex group to maintain proper indentation
 
-    - name: Restart containerd
-      service:
+    # NOTE: Yaml requires escaping backslashes in double quotes but not in single quotes
+    - name: Ensure SystemdCgroup is enabled for proper cgroup management
+      ansible.builtin.lineinfile:
+        path: /etc/containerd/config.toml
+        regexp: '^(\s+)SystemdCgroup = false'
+        line: '\1SystemdCgroup = true'
+        backrefs: yes
+        # This is required for Kubernetes to properly manage cgroups
+        validate: '/usr/bin/bash -c "containerd config validate %s"'
+
+    - name: Restart containerd service
+      ansible.builtin.service:
         name: containerd
         state: restarted
+        enabled: yes
+    # End of containerd configuration
 
     - name: Disable swap for running system
       ansible.builtin.shell: swapoff -a
@@ -69,30 +104,105 @@
         path: /etc/fstab
         regexp: '.*\sswap\s.*'
         state: absent
+    
+    # Start of br_netfilter configuration (Step 6)
+    - name: Create k8s.conf for module loading
+      ansible.builtin.copy:
+        dest: /etc/modules-load.d/k8s.conf
+        content: |
+          # Kubernetes required modules
+          overlay
+          br_netfilter
+        mode: '0644'
+        owner: root
+        group: root
+        backup: yes
         
-    - name: Enable bridged traffic
-      sysctl:
+    - name: Install required community.general collection
+      shell: ansible-galaxy collection install community.general
+      delegate_to: localhost
+      run_once: true
+      changed_when: false
+        
+    - name: Load br_netfilter module and make persistent
+      community.general.modprobe:
+        name: br_netfilter
+        state: present
+        persistent: present
+        
+    - name: Load overlay module and make persistent
+      community.general.modprobe:
+        name: overlay
+        state: present
+        persistent: present
+        
+    - name: Verify br_netfilter module is loaded
+      ansible.builtin.shell: lsmod | grep br_netfilter
+      register: br_netfilter_loaded
+      changed_when: false
+      failed_when: br_netfilter_loaded.rc != 0
+    # End of br_netfilter configuration
+    
+    - name: Install posix collection
+      shell: ansible-galaxy collection install ansible.posix
+      delegate_to: localhost
+      run_once: true
+      changed_when: false
+        
+    # Start of sysctl configuration (Step 7)
+    # Set ip forwarding on in /proc and in the sysctl file and reload if necessary
+    - name: Set net.ipv4.ip_forward to 1 in /etc/sysctl.conf and enable in kernel
+      ansible.posix.sysctl:
+        name: net.ipv4.ip_forward
+        value: '1'
+        sysctl_set: true
+        state: present
+        reload: true
+        
+    # Enable bridged traffic to pass through iptables
+    - name: Set net.bridge.bridge-nf-call-iptables to 1 for Kubernetes networking
+      ansible.posix.sysctl:
         name: net.bridge.bridge-nf-call-iptables
         value: '1'
+        sysctl_set: true
         state: present
-        sysctl_set: yes
-
-    - name: Add Kubernetes apt key
-      apt_key:
-        url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+        reload: true
+        # This setting is required for Kubernetes to function properly
+        
+    # Configure IPv6 settings if IPv6 is enabled
+    - name: Set net.bridge.bridge-nf-call-ip6tables to 1 if using IPv6
+      ansible.posix.sysctl:
+        name: net.bridge.bridge-nf-call-ip6tables
+        value: '1'
+        sysctl_set: true
         state: present
+        reload: true
+        sysctl_file: /etc/sysctl.d/99-kubernetes-cri.conf
+    # End of sysctl configuration
 
-    - name: Add Kubernetes repository
-      apt_repository:
-        repo: deb https://apt.kubernetes.io/ kubernetes-xenial main
+    # Kubernetes repository configuration (Step 9)
+    - name: Add Kubernetes signing key
+      ansible.builtin.apt_key:
+        url: https://pkgs.k8s.io/core:/stable:/v1.29/deb/Release.key
         state: present
         
-    - name: Install Kubernetes packages
-      apt:
+    - name: Add Kubernetes repository
+      ansible.builtin.apt_repository:
+        repo: deb https://pkgs.k8s.io/core:/stable:/v1.29/deb/ /
+        state: present
+        filename: kubernetes
+        
+    - name: Update apt cache after adding Kubernetes repository
+      ansible.builtin.apt:
+        update_cache: yes
+        
+    # Install Kubernetes tools with specific versions (Step 10)
+    - name: Install Kubernetes packages with specific versions
+      ansible.builtin.apt:
         name:
-          - kubelet
-          - kubeadm
-          - kubectl
+          - kubelet=1.32.4*
+          - kubeadm=1.32.4*
+          - kubectl=1.32.4*
         state: present
         
     - name: Hold Kubernetes packages
@@ -102,4 +212,11 @@
       loop:
         - kubelet
         - kubeadm
-        - kubectl 
+        - kubectl
+        
+    # Start kubelet service (Step 12)
+    - name: Start and enable kubelet service
+      ansible.builtin.service:
+        name: kubelet
+        state: started
+        enabled: yes 
