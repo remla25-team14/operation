@@ -18,6 +18,22 @@
           - software-properties-common
         state: present
 
+    # Add Docker repository for containerd.io
+    - name: Add Docker GPG key
+      ansible.builtin.apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+
+    - name: Add Docker repository
+      ansible.builtin.apt_repository:
+        repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+        state: present
+        filename: docker
+
+    - name: Update apt cache after adding Docker repository
+      ansible.builtin.apt:
+        update_cache: yes
+
     # Install container runtime (Step 10)
     - name: Install containerd.io and runc with specific versions
       ansible.builtin.apt:
