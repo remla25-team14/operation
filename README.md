@@ -84,3 +84,34 @@ This will:
 ## Contributors
 
 See `ACTIVITY.md` for individual contributions and PR links.
+
+
+
+# Kubernetes Vagrant Setup - REMLA Assignment 2
+
+This project provisions a Kubernetes environment using **Vagrant** and **Ansible**.
+
+---
+
+## Prerequisites
+
+- Vagrant (latest version)
+- VirtualBox or another Vagrant-supported provider
+- Ansible
+
+## Quick Start
+
+1. **Add your SSH key**:
+   ```bash
+   mkdir -p ssh_keys
+   cp ~/.ssh/id_rsa.pub ssh_keys/your_ssh_key.pub
+
+---
+2. **Start the cluster**:
+   ```bash
+   vagrant up
+   
+
+
+
+
