@@ -1,0 +1,162 @@
+---
+- hosts: all
+  become: yes
+  vars:
+    ssh_public_key: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
+  tasks:
+    - name: install apt packages
+      apt:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - python3-pip
+        update_cache: yes
+
+    - name: update APT packages
+      apt:
+        update_cache: yes
+
+    - name: reboot and wait for reboot to complete
+      reboot:
+    
+    - name: Add SSH public key to vagrant user
+      ansible.posix.authorized_key:
+        user: vagrant
+        state: present
+        key: "{{ ssh_public_key }}"
+        manage_dir: yes
+    
+    - name: Load br_netfilter module immediately
+      modprobe:
+        name: br_netfilter
+        state: present
+
+    - name: Load overlay module immediately
+      modprobe:
+        name: overlay
+        state: present
+
+    - name: Ensure br_netfilter module is loaded
+      ansible.builtin.modprobe:
+        name: br_netfilter
+        state: present
+
+    - name: Disable swap
+      shell: |
+        swapoff -a
+        sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
+
+    - name: Enable IPv4 forwarding and bridge settings
+      ansible.builtin.sysctl:
+        name: "{{ item.key }}"
+        value: "{{ item.value }}"
+        state: present
+        reload: yes
+      with_items:
+        - { key: 'net.ipv4.ip_forward', value: '1' }
+        - { key: 'net.bridge.bridge-nf-call-iptables', value: '1' }
+        - { key: 'net.bridge.bridge-nf-call-ip6tables', value: '1' }
+    
+    - name: Persist sysctl settings in /etc/sysctl.d/k8s.conf
+      ansible.builtin.copy:
+        dest: /etc/sysctl.d/k8s.conf
+        content: |
+          net.ipv4.ip_forward=1
+          net.bridge.bridge-nf-call-iptables=1
+          net.bridge.bridge-nf-call-ip6tables=1
+        mode: '0644'
+
+    - name: Generate /etc/hosts from inventory
+      become: true
+      ansible.builtin.template:
+        src: template/hosts.j2
+        dest: /etc/hosts
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: add Kubernetes apt-key
+      get_url:
+        url: https://pkgs.k8s.io/core:/stable:/v1.29/deb/Release.key
+        dest: /etc/apt/keyrings/kubernetes-apt-keyring.asc
+        mode: '0644'
+        force: true
+
+    - name: add Kubernetes' APT repository
+      apt_repository:
+        repo: "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.asc] https://pkgs.k8s.io/core:/stable:/v1.29/deb/ /"
+        state: present
+        update_cache: yes
+
+    - name: install containerd
+      apt:
+        name: containerd
+
+    - name: Install Kubelet
+      apt:
+        name: kubelet=1.29.*
+        state: present
+        update_cache: true
+
+    - name: Install Kubeadm
+      apt:
+        name: kubeadm=1.29.*
+        state: present
+    
+    - name: Ensure containerd config directory exists
+      file:
+        path: /etc/containerd
+        state: directory
+        mode: 0755
+
+    - name: Check if config.toml exists
+      ansible.builtin.stat:
+        path: /etc/containerd/config.toml
+      register: config_exists
+
+    - name: Generate default config if missing
+      command: containerd config default
+      register: default_config
+      when: not config_exists.stat.exists
+      changed_when: default_config.rc == 0
+
+    - name: Create initial config
+      copy:
+        dest: /etc/containerd/config.toml
+        content: "{{ default_config.stdout }}"
+      when: not config_exists.stat.exists
+
+
+    - name: Update sandbox image version
+      replace:
+        path: /etc/containerd/config.toml
+        regexp: '^(\s*)sandbox_image(\s*)=(\s*)"[^"]*"'
+        replace: '\1sandbox_image = "registry.k8s.io/pause:3.10"'
+
+    - name: Disable AppArmor
+      replace:
+        path: /etc/containerd/config.toml
+        regexp: '^(\s*)disable_apparmor(\s*)=(\s*)\w+'
+        replace: '\1disable_apparmor = true'
+      register: apparmor_change
+
+    - name: Configure SystemdCgroup
+      replace:
+        path: /etc/containerd/config.toml
+        regexp: '^(\s*)SystemdCgroup(\s*)=(\s*)\w+'
+        replace: '\1SystemdCgroup = true'
+
+    - name: Restart containerd service
+      systemd:
+        name: containerd
+        state: restarted
+        enabled: yes
+        daemon_reload: yes
+      when: apparmor_change.changed
+
+    - name: Enable the Kubelet service
+      service:
+        name: kubelet
+        enabled: yes
+
