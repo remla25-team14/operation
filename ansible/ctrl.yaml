@@ -1,4 +1,63 @@
 ---
-- hosts: ctrl
-  become: yes
+- name: Set up Kubernetes Controller
+  hosts: ctrl
+  become: yes # Run tasks as root
+
   tasks:
+    # Task to check if Kubernetes is already initialized
+    - name: Check if Kubernetes control plane is already initialized
+      ansible.builtin.stat:
+        path: /etc/kubernetes/admin.conf
+      register: kube_init_check
+
+    # Task to initialize the Kubernetes cluster
+    - name: Initialize Kubernetes cluster
+      ansible.builtin.command: >
+        kubeadm init
+        --apiserver-advertise-address {{ hostvars['ctrl']['ansible_host'] }} # Use the IP from inventory
+        --control-plane-endpoint {{ ansible_hostname }} # Use the hostname
+        --upload-certs # Useful for HA, good practice
+        --node-name {{ ansible_hostname }}
+        --pod-network-cidr 10.244.0.0/16 # Default for Flannel
+        --kubernetes-version 1.32.4 # Specify the version installed in general.yaml
+      register: kube_init_output
+      changed_when: kube_init_output.rc == 0
+      when: not kube_init_check.stat.exists # Only run if admin.conf does NOT exist
+      # You might want to add a retries and delay here in case of transient issues
+      # retries: 5
+      # delay: 10
+
+    # Task to display the join command (useful for debugging/manual joins)
+    # This task is not strictly required by the PDF for this step,
+    # but capturing the output is mentioned in Step 18 for the worker setup.
+    # You could expand on this later to capture the full join command for Step 19.
+    # - name: Display kubeadm join command (Controller)
+    #   debug:
+    #     msg: "{{ kube_init_output.stdout }}"
+    #   when: kube_init_output.changed # Only show if init ran
+    # Task to create the .kube directory for the vagrant user on the controller
+    - name: Ensure .kube directory exists for vagrant user on controller
+      ansible.builtin.file:
+        path: /home/vagrant/.kube
+        state: directory
+        owner: vagrant
+        group: vagrant
+        mode: '0755'
+
+    # Task to copy admin.conf to vagrant user's home directory on the controller
+    - name: Copy admin.conf to vagrant user home on controller
+      ansible.builtin.copy:
+        src: /etc/kubernetes/admin.conf # Source on the controller
+        dest: /home/vagrant/.kube/config # Destination on the controller
+        remote_src: yes # Source is on the remote machine
+        owner: vagrant
+        group: vagrant
+        mode: '0644' # Read permissions for owner
+
+    # Task to fetch admin.conf to the host machine
+    - name: Fetch admin.conf to host
+      ansible.builtin.fetch:
+        src: /etc/kubernetes/admin.conf # Source on the controller
+        dest: ./kube_config/config # Destination on the host
+        flat: yes # Save as 'config' directly in the dest directory
+
