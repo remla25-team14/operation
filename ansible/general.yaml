@@ -24,7 +24,7 @@
       ansible.posix.authorized_key:
         user: vagrant
         state: present
-        key: "{{ lookup('file', ssh_key_path) }}"
+        key: "{{ lookup('file', '../ssh_keys/your_ssh_key.pub') }}"
         manage_dir: yes
     
     - name: Load br_netfilter module immediately

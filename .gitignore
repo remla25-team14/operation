@@ -1,0 +1,13 @@
+.vagrant/
+/kube_config/
+*.vbox.log
+*.vbox.log.[0-9]
+.vscode/
+*.swp
+*~
+.#*
+venv/
+.venv/
+__pycache__/
+*.pyc
+*.log
