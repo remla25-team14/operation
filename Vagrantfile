@@ -17,12 +17,13 @@ Vagrant.configure("2") do |config|
       v.cpus = 2
     end
 
-    # Ansible provisioning
+    # # Ansible provisioning
     ctrl.vm.provision "ansible" do |ansible|
       ansible.playbook = "ansible/general.yaml"
       ansible.inventory_path = "ansible/hosts.ini"
     end
     ctrl.vm.provision "ansible" do |ansible|
+     ansible.inventory_path = "ansible/hosts.ini"
      ansible.playbook = "ansible/ctrl.yaml"
     end
   end
@@ -45,6 +46,7 @@ Vagrant.configure("2") do |config|
         ansible.inventory_path = "ansible/hosts.ini"
       end
       node.vm.provision "ansible" do |ansible|
+       ansible.inventory_path = "ansible/hosts.ini"
        ansible.playbook = "ansible/node.yaml"
       end
     end

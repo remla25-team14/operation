@@ -109,3 +109,11 @@
         name: helm
         state: present
       become: yes
+    
+    - name: Install Helm diff plugin
+      ansible.builtin.command: helm plugin install https://github.com/databus23/helm-diff
+      become_user: vagrant # Helm plugins are typically installed for a user
+      environment:
+        KUBECONFIG: /home/vagrant/.kube/config # Helm might need this to list plugins or for other reasons
+      args:
+        creates: /home/vagrant/.local/share/helm/plugins/helm-diff/plugin.yaml
