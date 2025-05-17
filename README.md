@@ -66,6 +66,21 @@ This will:
 
 ---
 
+## Monitoring and Observability
+
+We have instrumented the backend service with Prometheus to expose and collect metrics for improved observability. These metrics include:
+
+- **Application Info (`app_info`)**: Captures the application version as a gauge metric.
+- **Sentiment Ratio (`sentiment_ratio`)**: A gauge tracking the ratio of positive reviews to total reviews.
+- **Sentiment Predictions (`sentiment_predictions_total`)**: A counter labeled by `sentiment` (`positive` or `negative`) counting each prediction.
+- **Model Response Time (`model_response_time_seconds`)**: A histogram measuring the response time from the model service.
+
+The backend exposes these metrics at the `/metrics` endpoint. In Kubernetes, the `ServiceMonitor` defined in `app/kubernetes/monitoring.yml` scrapes the `sentiment-app-service` (port `http`) every second at the `/metrics` path.
+
+By integrating Prometheus with our application and Kubernetes `ServiceMonitor`, we enable real-time monitoring, alerting, and dashboarding of key performance and usage metrics.
+
+---
+
 ## Progress Log
 
 ### Assignment 1 – Versioning, Releases and Containerization
