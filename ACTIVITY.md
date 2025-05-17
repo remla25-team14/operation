@@ -10,6 +10,7 @@ Merged: https://github.com/remla25-team14/lib-version/pull/1
 # A2:
 -- Ilma Jaganjac: --
 Created PR: https://github.com/remla25-team14/operation/pull/4
+Created PR: https://github.com/remla25-team14/operation/pull/11
 Approved PR: https://github.com/remla25-team14/operation/pull/4
 Merged PR: https://github.com/remla25-team14/operation/pull/2
 Merged PR: https://github.com/remla25-team14/operation/pull/4
