@@ -1,0 +1,12 @@
+#This config map is not required to for the sentiment app to run. We are making this to
+#demonstrate our knowledge
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dummy-config
+data:
+  LOG_LEVEL: "debug"
+  APP_MODE: "prod"
+
+
+

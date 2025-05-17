@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: {{ include "sentiment-chart.fullname" . }}-app
+  labels:
+    app: {{ include "sentiment-chart.fullname" . }}-app
+spec:
+  containers:
+    - name: sentiment-app
+      image: {{ .Values.app.image }}
+      imagePullPolicy: IfNotPresent
+      ports:
+        - containerPort: {{ .Values.app.port }}
+      env:
+        - name: MODEL_SERVICE_URL
+          value: "http://{{ include "sentiment-chart.fullname" . }}-model:{{ .Values.model.port }}"
+        - name: APP_MODE
+          valueFrom:
+            configMapKeyRef:
+              name: dummy-config
+              key: APP_MODE
+        - name: LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: dummy-config
+              key: LOG_LEVEL

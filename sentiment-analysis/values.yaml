@@ -1,0 +1,24 @@
+fullnameOverride: ""
+prefix: sentiment
+
+model:
+  image: ghcr.io/remla25-team14/model-service:latest
+  port: 5000
+  artifactId: "3143858901"
+
+app:
+  image: ghcr.io/remla25-team14/app
+  port: 5001
+  servicePort: 80
+
+githubTokenSecretName: github-token
+githubTokenKey: GITHUB_TOKEN
+
+monitoring:
+  enabled: true
+  release: myprom
+
+sharedVolume:
+  enabled: true
+  path: /mnt/shared
+  hostPath: /mnt/shared
