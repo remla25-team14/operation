@@ -72,8 +72,6 @@
       register: flannel_apply_result
       changed_when: "'created' in flannel_apply_result.stdout or 'configured' in flannel_apply_result.stdout"
       when: kubernetes_admin_conf_stat_result.stat.exists or (kubeadm_init_result is defined and kubeadm_init_result.changed)
-    
-
 
     - name: Create /usr/share/keyrings directory if it doesn't exist
       ansible.builtin.file:
@@ -82,33 +80,18 @@
         mode: '0755'
       become: yes
 
-    - name: Add Helm GPG key
+    - name: Download Helm installation script
       ansible.builtin.get_url:
-        url: https://baltocdn.com/helm/signing.asc
-        dest: /usr/share/keyrings/helm.asc
-        mode: '0644'
-        force: yes
+        url: https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+        dest: /tmp/get_helm.sh
+        mode: '0755'
       become: yes
 
-    - name: Add Helm APT repository
-      ansible.builtin.apt_repository:
-        repo: "deb [arch=amd64 signed-by=/usr/share/keyrings/helm.asc] https://baltocdn.com/helm/stable/debian/ all main"
-        state: present
-        filename: helm-stable-debian
+    - name: Install Helm using script
+      ansible.builtin.command: /tmp/get_helm.sh
       become: yes
-      register: helm_repo_added
-
-    - name: Update apt cache after adding Helm repository
-      ansible.builtin.apt:
-        update_cache: yes
-      become: yes
-      when: helm_repo_added.changed
-
-    - name: Install Helm package
-      ansible.builtin.apt:
-        name: helm
-        state: present
-      become: yes
+      args:
+        creates: /usr/local/bin/helm  # Make it idempotent
     
     - name: Install Helm diff plugin
       ansible.builtin.command: helm plugin install https://github.com/databus23/helm-diff

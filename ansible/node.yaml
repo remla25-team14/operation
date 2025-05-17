@@ -1,30 +1,20 @@
 ---
-- hosts: workers # Assuming your inventory has a 'workers' group for node-1, node-2, etc.
+- hosts: workers
   become: yes
   tasks:
-    # STEP 18: Generate Join Command (Run on controller, result used by workers)
-    - name: Generate Kubernetes join command from the controller
-      ansible.builtin.command: kubeadm token create --print-join-command
-      delegate_to: "{{ groups['ctrl'][0] }}" # Delegate to the first (and only) host in the 'ctrl' group
-                                           # Ensure your inventory has a 'ctrl' group.
-      run_once: true                     # Important: Only run this once per playbook run, not per worker.
-                                           # The token is the same for all workers joining at this time.
+    - name: Get join command from controller via local vagrant
+      ansible.builtin.command: vagrant ssh ctrl -c "sudo kubeadm token create --print-join-command"
       register: kubeadm_join_command_result
-      become: yes                        # kubeadm token create usually needs sudo
-      changed_when: false                # Generating a token isn't a state change on the controller for this purpose.
-                                           # The actual joining of nodes is the state change.
-
-    - name: Debug print join command (optional)
+      delegate_to: localhost
+      become: no  
+      run_once: true
+      changed_when: false
+      
+    - name: Debug print join command
       ansible.builtin.debug:
         var: kubeadm_join_command_result.stdout
-      run_once: true # Only print it once
-    
+        
     - name: Join the worker node to the Kubernetes cluster
-      ansible.builtin.shell: "{{ kubeadm_join_command_result.stdout }}" # Execute the captured command string
+      ansible.builtin.shell: "{{ kubeadm_join_command_result.stdout }}"
       args:
-        # We need a way to make this idempotent. Kubelet being configured and running after a successful join
-        # is a good indicator. A simpler check is the presence of /etc/kubernetes/kubelet.conf
-        # which kubeadm join creates.
         creates: /etc/kubernetes/kubelet.conf
-      become: yes
-      register: worker_join_result
