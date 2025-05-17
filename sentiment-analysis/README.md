@@ -15,8 +15,8 @@ This Helm chart deploys the sentiment analysis web application and its model ser
 Before installing the chart, create the GitHub token secret. The Github token is your PAT token which is used to fetch the model artifact. You can create/manage your PAT [here](https://github.com/settings/tokens).
 
 ```bash
-kubectl create secret generic github-token \
-  --from-file=GITHUB_TOKEN=operations/secrets/github_token.txt
+kubectl create secret generic github-token \                                
+  --from-literal=GITHUB_TOKEN=<your github PAT token>
 ```
 ---
 
