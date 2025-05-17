@@ -26,4 +26,5 @@ Approved PR: https://github.com/remla25-team14/app/pull/2
 
 # A3:
 Created PR: https://github.com/remla25-team14/app/pull/4
-Created PR: 
+Created PR: https://github.com/remla25-team14/operation/pull/9
+Merged PR : https://github.com/remla25-team14/operation/pull/9
