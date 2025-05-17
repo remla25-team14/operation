@@ -1,0 +1,16 @@
+{{- if .Values.monitoring.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "sentiment-chart.fullname" . }}-monitor
+  labels:
+    release: {{ .Values.monitoring.release }}
+spec:
+  selector:
+    matchLabels:
+      app: {{ include "sentiment-chart.fullname" . }}-app-serv
+  endpoints:
+    - interval: 1s
+      path: /metrics
+      port: http
+{{- end }}
