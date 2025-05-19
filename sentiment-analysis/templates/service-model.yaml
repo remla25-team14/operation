@@ -10,4 +10,3 @@ spec:
   ports:
     - port: {{ .Values.model.port }}
       targetPort: {{ .Values.model.port }}
-      protocol: TCP

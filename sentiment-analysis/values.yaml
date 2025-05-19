@@ -22,3 +22,8 @@ sharedVolume:
   enabled: true
   path: /mnt/shared
   hostPath: /mnt/shared
+
+ingress:
+  enabled: true
+  host: sentiment.local
+  className: nginx
