@@ -6,7 +6,7 @@ This Helm chart deploys the sentiment analysis web application and its model ser
 
 ## Prerequisites
 
-- The kubernetes cluster is up by running. You can do this by running `vagrant up`.
+- A running kubernetes cluster
 
 ---
 
