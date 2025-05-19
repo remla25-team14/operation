@@ -1,0 +1,35 @@
+---
+- name: Finalize Kubernetes Cluster
+  hosts: ctrl
+  become: yes
+  tasks:
+
+    - name: Apply CRDs
+      shell: kubectl apply -f /vagrant/ansible/files/metallb-native.yaml
+
+    - name: Apply MetalLB Config
+      shell: kubectl apply -f /vagrant/ansible/files/metallb-config.yaml
+
+    - name: Wait for MetalLB
+      shell: |
+        kubectl wait -n metallb-system --for=condition=ready pod --all --timeout=120s
+      register: wait_mlb
+      failed_when: wait_mlb.rc != 0
+
+    - name: Add Helm
+      shell: helm repo add kubernetes-dashboard https://kubernetes.github.io/dashboard
+      args:
+        creates: /root/.cache/helm/repository/kubernetes-dashboard-index.yaml
+
+    - name: Update Helm
+      shell: helm repo update
+
+    - name: Install Dashboard
+      shell: |
+        helm install kubernetes-dashboard kubernetes-dashboard/kubernetes-dashboard \
+          --namespace kubernetes-dashboard --create-namespace \
+          --set service.type=LoadBalancer \
+          --set service.loadBalancerIP=192.168.56.95
+
+    - name: Apply Binding
+      shell: kubectl apply -f /vagrant/ansible/files/dashboard-admin.yaml
