@@ -11,3 +11,4 @@ venv/
 __pycache__/
 *.pyc
 *.logsecrets/github_token.txt
+secrets/github_token.txt
