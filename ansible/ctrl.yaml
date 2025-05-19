@@ -1,42 +1,28 @@
 ---
-- name: Set up Kubernetes Controller
+
+- name: Configure Kubernetes Controller
   hosts: ctrl
-  become: yes # Run tasks as root
+  become: yes 
 
   tasks:
-    # Task to check if Kubernetes is already initialized
-    - name: Check if Kubernetes control plane is already initialized
+
+    - name: Check if Kubernetes cluster is already initialized
       ansible.builtin.stat:
         path: /etc/kubernetes/admin.conf
-      register: kube_init_check
+      register: kubernetes_admin_conf_stat_result
 
-    # Task to initialize the Kubernetes cluster
-    - name: Initialize Kubernetes cluster
+    - name: Initialize Kubernetes cluster with kubeadm
       ansible.builtin.command: >
         kubeadm init
-        --apiserver-advertise-address {{ hostvars['ctrl']['ansible_host'] }} # Use the IP from inventory
-        --control-plane-endpoint {{ ansible_hostname }} # Use the hostname
-        --upload-certs # Useful for HA, good practice
-        --node-name {{ ansible_hostname }}
-        --pod-network-cidr 10.244.0.0/16 # Default for Flannel
-        --kubernetes-version 1.32.4 # Specify the version installed in general.yaml
-      register: kube_init_output
-      changed_when: kube_init_output.rc == 0
-      when: not kube_init_check.stat.exists # Only run if admin.conf does NOT exist
-      # You might want to add a retries and delay here in case of transient issues
-      # retries: 5
-      # delay: 10
+        --apiserver-advertise-address=192.168.56.100
+        --node-name ctrl
+        --pod-network-cidr=10.244.0.0/16
+      args:
+        creates: /etc/kubernetes/admin.conf
+      when: not kubernetes_admin_conf_stat_result.stat.exists
+      register: kubeadm_init_result
 
-    # Task to display the join command (useful for debugging/manual joins)
-    # This task is not strictly required by the PDF for this step,
-    # but capturing the output is mentioned in Step 18 for the worker setup.
-    # You could expand on this later to capture the full join command for Step 19.
-    # - name: Display kubeadm join command (Controller)
-    #   debug:
-    #     msg: "{{ kube_init_output.stdout }}"
-    #   when: kube_init_output.changed # Only show if init ran
-    # Task to create the .kube directory for the vagrant user on the controller
-    - name: Ensure .kube directory exists for vagrant user on controller
+    - name: Create .kube directory for vagrant user on controller
       ansible.builtin.file:
         path: /home/vagrant/.kube
         state: directory
@@ -44,20 +30,73 @@
         group: vagrant
         mode: '0755'
 
-    # Task to copy admin.conf to vagrant user's home directory on the controller
-    - name: Copy admin.conf to vagrant user home on controller
+    - name: Copy admin.conf to vagrant user's home on controller
       ansible.builtin.copy:
-        src: /etc/kubernetes/admin.conf # Source on the controller
-        dest: /home/vagrant/.kube/config # Destination on the controller
-        remote_src: yes # Source is on the remote machine
+        src: /etc/kubernetes/admin.conf
+        dest: /home/vagrant/.kube/config
+        remote_src: yes
         owner: vagrant
         group: vagrant
-        mode: '0644' # Read permissions for owner
+        mode: '0600'
+      when: kubernetes_admin_conf_stat_result.stat.exists or (kubeadm_init_result is defined and kubeadm_init_result.changed)
 
-    # Task to fetch admin.conf to the host machine
-    - name: Fetch admin.conf to host
-      ansible.builtin.fetch:
-        src: /etc/kubernetes/admin.conf # Source on the controller
-        dest: ./kube_config/config # Destination on the host
-        flat: yes # Save as 'config' directly in the dest directory
+    - name: Slurp admin.conf from controller
+      ansible.builtin.slurp:
+        src: /etc/kubernetes/admin.conf
+      register: admin_conf_slurp_result
+      when: kubernetes_admin_conf_stat_result.stat.exists or (kubeadm_init_result is defined and kubeadm_init_result.changed)
+      become: yes
 
+    - name: Copy admin.conf content to local file
+      delegate_to: localhost 
+      become: no 
+      ansible.builtin.copy:
+        content: "{{ admin_conf_slurp_result['content'] | b64decode }}" 
+        dest: "{{ playbook_dir }}/.kube/config" 
+        mode: '0600' 
+      when: admin_conf_slurp_result is defined
+
+    - name: Copy modified Flannel manifest to controller
+      ansible.builtin.copy:
+        src: "{{ playbook_dir }}/files/kube-flannel.yml" 
+        dest: /home/vagrant/kube-flannel-modified.yml
+        owner: vagrant
+        group: vagrant
+        mode: '0644'
+
+    - name: Apply Flannel Pod Network
+      ansible.builtin.shell: kubectl apply -f /home/vagrant/kube-flannel-modified.yml 
+      become_user: vagrant 
+      environment: 
+        KUBECONFIG: /home/vagrant/.kube/config
+      register: flannel_apply_result
+      changed_when: "'created' in flannel_apply_result.stdout or 'configured' in flannel_apply_result.stdout"
+      when: kubernetes_admin_conf_stat_result.stat.exists or (kubeadm_init_result is defined and kubeadm_init_result.changed)
+
+    - name: Create /usr/share/keyrings directory if it doesn't exist
+      ansible.builtin.file:
+        path: /usr/share/keyrings
+        state: directory
+        mode: '0755'
+      become: yes
+
+    - name: Download Helm installation script
+      ansible.builtin.get_url:
+        url: https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+        dest: /tmp/get_helm.sh
+        mode: '0755'
+      become: yes
+
+    - name: Install Helm using script
+      ansible.builtin.command: /tmp/get_helm.sh
+      become: yes
+      args:
+        creates: /usr/local/bin/helm  # Make it idempotent
+    
+    - name: Install Helm diff plugin
+      ansible.builtin.command: helm plugin install https://github.com/databus23/helm-diff
+      become_user: vagrant # Helm plugins are typically installed for a user
+      environment:
+        KUBECONFIG: /home/vagrant/.kube/config # Helm might need this to list plugins or for other reasons
+      args:
+        creates: /home/vagrant/.local/share/helm/plugins/helm-diff/plugin.yaml

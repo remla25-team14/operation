@@ -13,18 +13,19 @@ Vagrant.configure("2") do |config|
     ctrl.vm.network "private_network", ip: CONTROLLER_IP
     
     ctrl.vm.provider "virtualbox" do |v|
-      v.memory = 1024
-      v.cpus = 1
+      v.memory = 2048
+      v.cpus = 2
     end
 
-    # Ansible provisioning
+    # # Ansible provisioning
     ctrl.vm.provision "ansible" do |ansible|
       ansible.playbook = "ansible/general.yaml"
       ansible.inventory_path = "ansible/hosts.ini"
     end
-    #ctrl.vm.provision "ansible" do |ansible|
-    #  ansible.playbook = "ansible/ctrl.yaml"
-    #end
+    ctrl.vm.provision "ansible" do |ansible|
+     ansible.inventory_path = "ansible/hosts.ini"
+     ansible.playbook = "ansible/ctrl.yaml"
+    end
   end
 
   # Worker nodes configuration
@@ -35,7 +36,7 @@ Vagrant.configure("2") do |config|
       node.vm.network "private_network", ip: "192.168.56.#{WORKER_IP_START + i - 1}"
       
       node.vm.provider "virtualbox" do |v|
-        v.memory = 1024
+        v.memory = 2048
         v.cpus = 2
       end
 
@@ -44,9 +45,10 @@ Vagrant.configure("2") do |config|
         ansible.playbook = "ansible/general.yaml"
         ansible.inventory_path = "ansible/hosts.ini"
       end
-      #node.vm.provision "ansible" do |ansible|
-      #  ansible.playbook = "ansible/node.yaml"
-      #end
+      node.vm.provision "ansible" do |ansible|
+       ansible.inventory_path = "ansible/hosts.ini"
+       ansible.playbook = "ansible/node.yaml"
+      end
     end
   end
 end

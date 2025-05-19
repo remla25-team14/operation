@@ -108,6 +108,18 @@
         name: kubeadm=1.32.4-1.1
         state: present
     
+    - name: Install kubectl
+      apt:
+        name: kubectl=1.32.4-1.1
+        state: present
+    
+    - name: Install Python Kubernetes client library for Ansible modules
+      ansible.builtin.apt:
+        name: python3-kubernetes
+        state: present
+        update_cache: yes 
+      become: yes
+
     - name: Ensure containerd config directory exists
       file:
         path: /etc/containerd
