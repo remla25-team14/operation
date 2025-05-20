@@ -44,6 +44,7 @@ Approved PR: https://github.com/remla25-team14/app/pull/2
 
 -- Shael Hakimi --
 Created PR: https://github.com/remla25-team14/operation/pull/5
+Approved PR: https://github.com/remla25-team14/lib-version/pull/1
 
 # W4:
 -- Ilma Jaganjac: --
