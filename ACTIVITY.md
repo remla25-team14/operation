@@ -59,3 +59,6 @@ Merged PR: https://github.com/remla25-team14/operation/pull/12
 Created PR: https://github.com/remla25-team14/operation/pull/12/files (Addresses A3 1.1)
 Approved PR: https://github.com/remla25-team14/operation/pull/11
 Merged PR: https://github.com/remla25-team14/operation/pull/12
+
+-- Shael Hakimi --
+Approved PR: https://github.com/remla25-team14/operation/pull/3
