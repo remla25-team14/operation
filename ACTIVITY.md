@@ -18,6 +18,13 @@ Approved PR: https://github.com/remla25-team14/lib-ml/pull/1
 Approved PR: https://github.com/remla25-team14/lib-version/pull/1
 Approved PR: https://github.com/remla25-team14/app/pull/2
 
+-- Shael Hakimi --
+Created PR: https://github.com/remla25-team14/lib-ml/pull/1
+Created PR: https://github.com/remla25-team14/lib-ml/pull/2
+Created PR: https://github.com/remla25-team14/lib-ml/pull/3
+Approved PR: https://github.com/remla25-team14/lib-ml/pull/4
+
+
 # W3:
 -- Ilma Jaganjac: --
 Created PR: https://github.com/remla25-team14/operation/pull/4
@@ -34,6 +41,9 @@ Merged PR: https://github.com/remla25-team14/lib-ml/pull/4
 Approved PR: https://github.com/remla25-team14/lib-ml/pull/1
 Approved PR: https://github.com/remla25-team14/lib-version/pull/1
 Approved PR: https://github.com/remla25-team14/app/pull/2
+
+-- Shael Hakimi --
+Created PR: https://github.com/remla25-team14/operation/pull/5
 
 # W4:
 -- Ilma Jaganjac: --
