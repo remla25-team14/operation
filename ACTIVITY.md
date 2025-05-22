@@ -24,6 +24,14 @@ Created PR: https://github.com/remla25-team14/lib-ml/pull/2
 Created PR: https://github.com/remla25-team14/lib-ml/pull/3
 Approved PR: https://github.com/remla25-team14/lib-ml/pull/4
 
+-- Ciprian Bica --
+Created PR: https://github.com/remla25-team14/model-service/pull/1
+Created PR: https://github.com/remla25-team14/model-service/pull/2
+Approved PR: https://github.com/remla25-team14/model-training/pull/1
+
+-- Zeyu Fan --
+Created PR: https://github.com/remla25-team14/lib-version/pull/1
+Approved PR: https://github.com/remla25-team14/operation/pull/1
 
 # W3:
 -- Ilma Jaganjac: --
@@ -46,6 +54,14 @@ Approved PR: https://github.com/remla25-team14/app/pull/2
 Created PR: https://github.com/remla25-team14/operation/pull/5
 Approved PR: https://github.com/remla25-team14/lib-version/pull/1
 
+-- Ciprian Bica --
+Created PR: https://github.com/remla25-team14/operation/pull/6
+Approved PR: https://github.com/remla25-team14/operation/pull/7
+
+-- Zeyu Fan --
+Created PR: https://github.com/remla25-team14/operation/pull/7
+Approved PR: https://github.com/remla25-team14/operation/pull/6
+
 # W4:
 -- Ilma Jaganjac: --
 Created PR: https://github.com/remla25-team14/app/pull/4
@@ -62,3 +78,7 @@ Merged PR: https://github.com/remla25-team14/operation/pull/12
 
 -- Shael Hakimi --
 Approved PR: https://github.com/remla25-team14/operation/pull/3
+
+-- Ciprian Bica --
+Created PR: https://github.com/remla25-team14/operation/pull/8
+Created PR: https://github.com/remla25-team14/model-service/pull/4
