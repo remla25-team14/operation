@@ -82,3 +82,7 @@ Approved PR: https://github.com/remla25-team14/operation/pull/3
 -- Ciprian Bica --
 Created PR: https://github.com/remla25-team14/operation/pull/8
 Created PR: https://github.com/remla25-team14/model-service/pull/4
+
+# W5:
+-- Shael Hakimi --
+Created PR: https://github.com/remla25-team14/app/pull/5
