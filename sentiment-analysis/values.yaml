@@ -5,9 +5,10 @@ model:
   image: ghcr.io/remla25-team14/model-service:latest
   port: 5000
   artifactId: "3143858901"
+  modelurl: version2-sentiment-chart-model
 
 app:
-  image: ghcr.io/remla25-team14/app
+  image: ghcr.io/remla25-team14/app/app:sha-06d792c
   port: 5001
   servicePort: 80
 
@@ -27,3 +28,22 @@ ingress:
   enabled: true
   host: sentiment.local
   className: nginx
+
+prometheus:
+  prometheusSpec:
+    externalUrl: http://prometheus.{{ .Values.ingress.host }}
+    routePrefix: /
+
+grafana:
+  enabled: true
+  dashboard:
+    uid: "sentiment-analysis"
+    title: "Sentiment Analysis"
+    refreshInterval: "5s"
+    tags: ["sentiment", "monitoring"]
+    editable: true
+  datasource:
+    uid: "prometheus"
+  env:
+    GF_SERVER_ROOT_URL: grafana.{{ .Values.ingress.host }}
+    GF_SERVER_SERVE_FROM_SUB_PATH: "false"

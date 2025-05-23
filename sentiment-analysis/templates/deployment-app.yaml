@@ -17,7 +17,7 @@ spec:
       containers:
         - name: sentiment-app
           image: {{ .Values.app.image }}
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           ports:
             - containerPort: {{ .Values.app.port }}
           readinessProbe:
@@ -34,7 +34,7 @@ spec:
             periodSeconds: 20
           env:
             - name: MODEL_SERVICE_URL
-              value: "http://{{ include "sentiment-chart.fullname" . }}-model:{{ .Values.model.port }}"
+              value: "http://{{ .Values.model.modelurl }}:{{ .Values.model.port }}"
             - name: APP_MODE
               valueFrom:
                 configMapKeyRef:
