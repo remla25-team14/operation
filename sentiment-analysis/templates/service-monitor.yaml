@@ -10,7 +10,7 @@ spec:
     matchLabels:
       app: {{ include "sentiment-chart.fullname" . }}-app-serv
   endpoints:
-    - interval: 1s
+    - interval: 5s
       path: /metrics
       port: http
 {{- end }}

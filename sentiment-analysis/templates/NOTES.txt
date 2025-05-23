@@ -1,0 +1,25 @@
+Thank you for installing {{ .Chart.Name }}.
+
+Your application has been deployed with the following configuration:
+
+Model Service:
+
+    URL: http://{{ .Values.model.modelurl }}-model:{{ .Values.model.port }}
+
+App Service:
+
+    Access URL: http://{{ .Values.ingress.host }}
+
+Grafana Dashboard:
+
+    Access URL: http://grafana.{{ .Values.ingress.host }}
+
+Prometheus Dashboard:
+
+    Access URL: http://prometheus.{{ .Values.ingress.host }}
+
+To check the status of your deployment, run:
+kubectl get pods
+
+To check the services, run:
+kubectl get services
