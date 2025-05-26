@@ -82,3 +82,12 @@ Approved PR: https://github.com/remla25-team14/operation/pull/3
 -- Ciprian Bica --
 Created PR: https://github.com/remla25-team14/operation/pull/8
 Created PR: https://github.com/remla25-team14/model-service/pull/4
+
+# W5:
+-- Ilma Jaganjac: --
+Created PR: https://github.com/remla25-team14/model-training/pull/2
+Approved PR: https://github.com/remla25-team14/model-training/pull/3
+Approved PR: https://github.com/remla25-team14/model-training/pull/5
+Merged: https://github.com/remla25-team14/model-training/pull/5
+Approved: https://github.com/remla25-team14/model-training/pull/6
+Merged: https://github.com/remla25-team14/model-training/pull/6
