@@ -85,3 +85,21 @@ Created PR: https://github.com/remla25-team14/model-service/pull/4
 Created PR: https://github.com/remla25-team14/operation/pull/13 (Addresses A3 1.1)
 
 
+=======
+# W5:
+-- Ilma Jaganjac: --
+Created PR: https://github.com/remla25-team14/model-training/pull/2
+Approved PR: https://github.com/remla25-team14/model-training/pull/3
+Approved PR: https://github.com/remla25-team14/model-training/pull/5
+Merged: https://github.com/remla25-team14/model-training/pull/5
+Approved: https://github.com/remla25-team14/model-training/pull/6
+Merged: https://github.com/remla25-team14/model-training/pull/6
+
+-- Shael Hakimi --
+Created PR: https://github.com/remla25-team14/app/pull/5
+Approved PR: https://github.com/remla25-team14/operation/pull/13
+Created PR: https://github.com/remla25-team14/model-training/pull/6
+Merged PR: https://github.com/remla25-team14/model-training/pull/4
+
+-- Reeve Lorena: --
+Created PR: https://github.com/remla25-team14/operation/pull/13 (Addresses A3 1.1)
