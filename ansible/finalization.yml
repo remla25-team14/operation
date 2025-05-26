@@ -1,247 +1,293 @@
-- hosts: all 
-  become: no
-  gather_facts: no
-
+---
+- name: Finalize Kubernetes Cluster Setup (finalization.yaml)
+  hosts: all
+  become: yes
+  become_user: vagrant
   vars:
-    metallb_namespace: "metallb-system"
+    kubeconfig_path_on_controller: "/home/vagrant/.kube/config"
+
     metallb_version: "v0.14.9"
+    metallb_native_yaml_url: "https://raw.githubusercontent.com/metallb/metallb/{{ metallb_version }}/config/manifests/metallb-native.yaml"
     metallb_ip_range_start: "192.168.56.90"
     metallb_ip_range_end: "192.168.56.99"
+    metallb_namespace: "metallb-system"
 
-    nginx_ingress_namespace: "ingress-nginx"
     nginx_ingress_helm_repo_url: "https://kubernetes.github.io/ingress-nginx"
+    nginx_ingress_helm_repo_name: "ingress-nginx"
     nginx_ingress_chart_name: "ingress-nginx"
-    nginx_ingress_release_name: "nginx-ingress"
-    # nginx_ingress_loadbalancer_ip: "192.168.56.90"
+    nginx_ingress_chart_version: "4.10.1"
+    nginx_ingress_namespace: "ingress-nginx"
+    nginx_ingress_loadbalancer_ip: "192.168.56.91"
 
-    dashboard_namespace: "kubernetes-dashboard"
     dashboard_helm_repo_url: "https://kubernetes.github.io/dashboard/"
+    dashboard_helm_repo_name: "kubernetes-dashboard"
     dashboard_chart_name: "kubernetes-dashboard"
-    dashboard_release_name: "dashboard"
+    dashboard_chart_version: "7.1.1"
+    dashboard_namespace: "kubernetes-dashboard"
+    dashboard_admin_user_name: "admin-user"
+    dashboard_hostname: "dashboard.local"
+    dashboard_service_name: "kubernetes-dashboard-kong-proxy"
+    dashboard_service_port: 443
+    dashboard_service_protocol: "HTTPS"
 
-  tasks:
-    - name: Create MetalLB namespace
-      kubernetes.core.k8s:
-        state: present
-        definition:
-          apiVersion: v1
-          kind: Namespace
-          metadata:
-            name: "{{ metallb_namespace }}"
-      environment:
-        KUBECONFIG: "/home/vagrant/.kube/config"
+    dashboard_admin_yaml: |
+      apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: {{ dashboard_admin_user_name }}
+        namespace: {{ dashboard_namespace }}
+      ---
+      apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRoleBinding
+      metadata:
+        name: {{ dashboard_admin_user_name }}-cluster-admin-binding
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: cluster-admin
+      subjects:
+      - kind: ServiceAccount
+        name: {{ dashboard_admin_user_name }}
+        namespace: {{ dashboard_namespace }}
 
-    - name: Apply MetalLB manifests
-      kubernetes.core.k8s:
-        state: present
-        src: "https://raw.githubusercontent.com/metallb/metallb/{{ metallb_version }}/config/manifests/metallb-native.yaml"
-      environment:
-        KUBECONFIG: "/home/vagrant/.kube/config"
-
-    - name: Wait for MetalLB controller Deployment to be ready
-      kubernetes.core.k8s_info:
-        api_version: apps/v1
-        kind: Deployment
-        name: controller
-        namespace: "{{ metallb_namespace }}"
-      register: metallb_controller_status
-      until: "metallb_controller_status.resources | length > 0 and metallb_controller_status.resources[0].status.readyReplicas is defined and metallb_controller_status.resources[0].status.readyReplicas == metallb_controller_status.resources[0].spec.replicas"
-      retries: 30
-      delay: 10
-      environment:
-        KUBECONFIG: "/home/vagrant/.kube/config"
-
-    - name: Wait for MetalLB speaker DaemonSet to be ready
-      kubernetes.core.k8s_info:
-        api_version: apps/v1
-        kind: DaemonSet
-        name: speaker
-        namespace: "{{ metallb_namespace }}"
-      register: metallb_speaker_status
-      until: "metallb_speaker_status.resources | length > 0 and metallb_speaker_status.resources[0].status.numberReady is defined and metallb_speaker_status.resources[0].status.numberReady == metallb_speaker_status.resources[0].status.desiredNumberScheduled"
-      retries: 30
-      delay: 10
-      environment:
-        KUBECONFIG: "/home/vagrant/.kube/config"
-
-    - name: Define MetalLB IPAddressPool
-      kubernetes.core.k8s:
-        state: present
-        definition:
-          apiVersion: metallb.io/v1beta1
-          kind: IPAddressPool
-          metadata:
-            name: default-pool
-            namespace: "{{ metallb_namespace }}"
-          spec:
-            addresses:
-              - "{{ metallb_ip_range_start }}-{{ metallb_ip_range_end }}"
-      environment:
-        KUBECONFIG: "/home/vagrant/.kube/config"
-
-    - name: Define MetalLB L2Advertisement
-      kubernetes.core.k8s:
-        state: present
-        definition:
-          apiVersion: metallb.io/v1beta1
-          kind: L2Advertisement
-          metadata:
-            name: default-l2
-            namespace: "{{ metallb_namespace }}"
-          spec:
-            ipAddressPools:
-              - default-pool
-      environment:
-        KUBECONFIG: "/home/vagrant/.kube/config"
-
-    - name: Add Nginx Ingress Helm repository
-      kubernetes.core.helm_repository:
-        name: ingress-nginx
-        repo_url: "{{ nginx_ingress_helm_repo_url }}"
-        state: present
-      environment:
-        KUBECONFIG: "/home/vagrant/.kube/config"
-
-    - name: Install Nginx Ingress Controller with Helm
-      kubernetes.core.helm:
-        name: "{{ nginx_ingress_release_name }}"
-        chart_ref: "ingress-nginx/{{ nginx_ingress_chart_name }}"
-        release_namespace: "{{ nginx_ingress_namespace }}"
-        create_namespace: yes
-        state: present
-        values:
-          controller:
-            service:
-              # loadBalancerIP: "{{ nginx_ingress_loadbalancer_ip | default(omit) }}"
-              annotations: {}
-      environment:
-        KUBECONFIG: "/home/vagrant/.kube/config"
-
-    - name: Wait for Nginx Ingress controller pods to be ready
-      ansible.builtin.shell: |
-        kubectl wait --for=condition=ready pod \
-          -l app.kubernetes.io/name=ingress-nginx,app.kubernetes.io/instance={{ nginx_ingress_release_name }},app.kubernetes.io/component=controller \
-          -n {{ nginx_ingress_namespace }} --timeout=300s
-      args:
-        executable: /bin/bash
-      changed_when: false
-      environment:
-        KUBECONFIG: "/home/vagrant/.kube/config"
-      register: ingress_pods_wait_result
-      until: ingress_pods_wait_result.rc == 0
-      retries: 3
-      delay: 15
-
-    - name: Add Kubernetes Dashboard Helm repository
-      kubernetes.core.helm_repository:
-        name: kubernetes-dashboard
-        repo_url: "{{ dashboard_helm_repo_url }}"
-        state: present
-      environment:
-        KUBECONFIG: "/home/vagrant/.kube/config"
-
-    - name: Install Kubernetes Dashboard with Helm
-      kubernetes.core.helm:
-        name: "{{ dashboard_release_name }}"
-        chart_ref: "kubernetes-dashboard/{{ dashboard_chart_name }}"
-        release_namespace: "{{ dashboard_namespace }}"
-        create_namespace: yes
-        state: present
-      environment:
-        KUBECONFIG: "/home/vagrant/.kube/config"
-    - name: Create Role for Dashboard's default SA to perform TokenReview
-      kubernetes.core.k8s:
-        state: present
-        definition:
-          apiVersion: rbac.authorization.k8s.io/v1
-          kind: Role
-          metadata:
-            namespace: "{{ dashboard_namespace }}"
-            name: dashboard-default-sa-tokenreviewer
-          rules:
-          - apiGroups: ["authentication.k8s.io"]
-            resources: ["tokenreviews"]
-            verbs: ["create"]
-          - apiGroups: ["authorization.k8s.io"]
-            resources: ["subjectaccessreviews"]
-            verbs: ["create"]
-      environment:
-        KUBECONFIG: "/home/vagrant/.kube/config"
-
-    - name: Bind Role to Dashboard's default SA
-      kubernetes.core.k8s:
-        state: present
-        definition:
-          apiVersion: rbac.authorization.k8s.io/v1
-          kind: RoleBinding
-          metadata:
-            name: dashboard-default-sa-tokenreviewer-binding
-            namespace: "{{ dashboard_namespace }}"
-          subjects:
-          - kind: ServiceAccount
-            name: default # The SA that the auth, api, web pods are using
-            namespace: "{{ dashboard_namespace }}"
-          roleRef:
-            kind: Role
-            name: dashboard-default-sa-tokenreviewer # The Role created above
-            apiGroup: rbac.authorization.k8s.io
-      environment:
-        KUBECONFIG: "/home/vagrant/.kube/config"
-      
-    - name: Create Dashboard admin-user ServiceAccount
-      kubernetes.core.k8s:
-        state: present
-        definition:
-          apiVersion: v1
-          kind: ServiceAccount
-          metadata:
-            name: admin-user
-            namespace: "{{ dashboard_namespace }}"
-      environment:
-        KUBECONFIG: "/home/vagrant/.kube/config"
-
-    - name: Create Dashboard admin-user ClusterRoleBinding
-      kubernetes.core.k8s:
-        state: present
-        definition:
-          apiVersion: rbac.authorization.k8s.io/v1
-          kind: ClusterRoleBinding
-          metadata:
-            name: admin-user
-          roleRef:
-            apiGroup: rbac.authorization.k8s.io
-            kind: ClusterRole
-            name: cluster-admin
-          subjects:
-          - kind: ServiceAccount
-            name: admin-user
-            namespace: "{{ dashboard_namespace }}"
-      environment:
-        KUBECONFIG: "/home/vagrant/.kube/config"
-
-    - name: Create Ingress for Kubernetes Dashboard
-      kubernetes.core.k8s:
-        state: present
-        definition:
-          apiVersion: networking.k8s.io/v1
-          kind: Ingress
-          metadata:
-            name: kubernetes-dashboard-ingress
-            namespace: "{{ dashboard_namespace }}"
-            annotations:
-              kubernetes.io/ingress.class: "nginx"
-              nginx.ingress.kubernetes.io/backend-protocol: "HTTPS" # Nginx talks HTTPS to this backend
-          spec:
-            rules:
-            - host: "dashboard.local"
-              http:
-                paths:
+    dashboard_ingress_yaml: |
+      apiVersion: networking.k8s.io/v1
+      kind: Ingress
+      metadata:
+        name: dashboard-ingress
+        namespace: {{ dashboard_namespace }}
+        annotations:
+          nginx.ingress.kubernetes.io/backend-protocol: "{{ dashboard_service_protocol | upper }}"
+      spec:
+        ingressClassName: nginx
+        rules:
+          - host: "{{ dashboard_hostname }}"
+            http:
+              paths:
                 - path: /
                   pathType: Prefix
                   backend:
                     service:
-                      name: "dashboard-kong-proxy" # CORRECTED SERVICE NAME
+                      name: "{{ dashboard_service_name }}"
                       port:
-                        number: 443 # This service listens on 443
-      environment:
-        KUBECONFIG: "/home/vagrant/.kube/config"
+                        number: {{ dashboard_service_port }}
+
+    istio_version: "1.25.2"
+    istio_download_url: "https://github.com/istio/istio/releases/download/{{ istio_version }}/istio-{{ istio_version }}-linux-amd64.tar.gz"
+    istio_extract_dest: "/home/vagrant"
+    istio_dir_name: "istio-{{ istio_version }}"
+    istio_install_profile: "demo"
+    istio_namespace: "istio-system"
+
+  environment:
+    KUBECONFIG: "{{ kubeconfig_path_on_controller }}"
+
+  tasks:
+    # --- Step 20: Install MetalLB ---
+    - name: Ensure metallb-system namespace exists
+      kubernetes.core.k8s:
+        kind: Namespace
+        name: "{{ metallb_namespace }}"
+        api_version: v1
+        state: present
+      when: inventory_hostname == "ctrl"
+
+    - name: Download MetalLB native YAML (v{{ metallb_version }})
+      ansible.builtin.get_url:
+        url: "{{ metallb_native_yaml_url }}"
+        dest: "/tmp/metallb-native.yaml"
+        mode: '0644'
+      become: no # Runs as vagrant user
+
+    - name: Apply MetalLB CRDs and main resources (Entire manifest)
+      kubernetes.core.k8s:
+        state: present
+        src: "/tmp/metallb-native.yaml"
+      register: metallb_apply_all_result
+
+    - name: "Wait for MetalLB controller POD to be ready (mimicking reference)"
+      kubernetes.core.k8s_info:
+        kind: Pod # Waiting for Pod
+        namespace: "{{ metallb_namespace }}"
+        label_selectors:
+          - app=metallb
+          - component=controller
+        wait: yes # Basic wait for pod to reach 'Running' and 'Ready'
+        wait_sleep: 15
+        wait_timeout: 120 # Generous timeout (300s)
+      register: metallb_pod_wait_result
+      # ansible_python_interpreter is inherited from play vars
+
+    - name: "Debug: MetalLB Pod Wait Result"
+      ansible.builtin.debug:
+        var: metallb_pod_wait_result
+      when: metallb_pod_wait_result is defined
+
+    - name: "Critical Pause: Allow MetalLB to fully initialize after pod is 'ready'"
+      ansible.builtin.pause:
+        seconds: 60 # A significant pause AFTER the pod reports as ready.
+      when: >
+        metallb_pod_wait_result.resources is defined and
+        metallb_pod_wait_result.resources | length > 0
+
+    # Now proceed with IPAddressPool and L2Advertisement
+    - name: Create MetalLB IPAddressPool manifest file
+      ansible.builtin.copy:
+        dest: "/tmp/metallb-ipaddresspool.yaml"
+        content: |
+          apiVersion: metallb.io/v1beta1
+          kind: IPAddressPool
+          metadata:
+            name: default-pool
+            namespace: {{ metallb_namespace }}
+          spec:
+            addresses:
+            - "{{ metallb_ip_range_start }}-{{ metallb_ip_range_end }}"
+        mode: '0644'
+      become: no
+
+    - name: Apply MetalLB IPAddressPool
+      kubernetes.core.k8s:
+        state: present
+        src: "/tmp/metallb-ipaddresspool.yaml"
+      register: ipaddresspool_apply_result
+      # ansible_python_interpreter is inherited from play vars
+
+    - name: "Debug: IPAddressPool Apply Result"
+      ansible.builtin.debug:
+        var: ipaddresspool_apply_result
+
+    - name: Create MetalLB L2Advertisement manifest file
+      ansible.builtin.copy:
+        dest: "/tmp/metallb-l2advertisement.yaml"
+        content: |
+          apiVersion: metallb.io/v1beta1
+          kind: L2Advertisement
+          metadata:
+            name: default-l2-advertisement
+            namespace: {{ metallb_namespace }}
+          spec: {} # Empty spec means it applies to all pools if not specified otherwise
+        mode: '0644'
+      become: no
+
+    - name: Apply MetalLB L2Advertisement
+      kubernetes.core.k8s:
+        state: present
+        src: "/tmp/metallb-l2advertisement.yaml"
+
+    # --- Step 21: Install Nginx Ingress Controller ---
+    - name: Add Nginx Ingress Helm repository
+      kubernetes.core.helm_repository:
+        name: "{{ nginx_ingress_helm_repo_name }}"
+        repo_url: "{{ nginx_ingress_helm_repo_url }}"
+        state: present
+
+    - name: Install/Upgrade Nginx Ingress Controller Helm chart
+      kubernetes.core.helm:
+        name: ingress-nginx # Release name
+        chart_ref: "{{ nginx_ingress_helm_repo_name }}/{{ nginx_ingress_chart_name }}"
+        chart_version: "{{ nginx_ingress_chart_version }}"
+        release_namespace: "{{ nginx_ingress_namespace }}"
+        create_namespace: yes
+        state: present
+        atomic: yes
+        timeout: "10m"
+        values:
+          controller:
+            service:
+              loadBalancerIP: "{{ nginx_ingress_loadbalancer_ip }}"
+
+    # --- Step 22: Install Kubernetes Dashboard ---
+    - name: Add Kubernetes Dashboard Helm repository
+      kubernetes.core.helm_repository:
+        name: "{{ dashboard_helm_repo_name }}"
+        repo_url: "{{ dashboard_helm_repo_url }}"
+        state: present
+
+    - name: Install/Upgrade Kubernetes Dashboard Helm chart
+      kubernetes.core.helm:
+        name: kubernetes-dashboard # Release name
+        chart_ref: "{{ dashboard_helm_repo_name }}/{{ dashboard_chart_name }}"
+        chart_version: "{{ dashboard_chart_version }}"
+        release_namespace: "{{ dashboard_namespace }}"
+        create_namespace: yes
+        state: present
+        atomic: yes
+        timeout: "5m"
+
+    - name: Create Dashboard admin user ServiceAccount and ClusterRoleBinding manifest
+      ansible.builtin.copy:
+        dest: "/tmp/dashboard-admin-config.yaml"
+        content: "{{ dashboard_admin_yaml }}"
+        mode: '0644'
+      become: no
+
+    - name: Apply Dashboard admin user configuration
+      kubernetes.core.k8s:
+        state: present
+        src: "/tmp/dashboard-admin-config.yaml"
+
+    - name: Wait for Nginx Ingress controller pods to be ready before applying Dashboard Ingress
+      ansible.builtin.command: >
+        kubectl wait --for=condition=Ready pod
+        -l app.kubernetes.io/component=controller,app.kubernetes.io/instance=ingress-nginx
+        -n {{ nginx_ingress_namespace }}
+        --timeout=300s
+      changed_when: false
+      retries: 3
+      delay: 15
+
+    - name: Create Dashboard Ingress manifest
+      ansible.builtin.copy:
+        dest: "/tmp/dashboard-ingress-config.yaml"
+        content: "{{ dashboard_ingress_yaml }}"
+        mode: '0644'
+      become: no
+
+    - name: Apply Dashboard Ingress
+      kubernetes.core.k8s:
+        state: present
+        src: "/tmp/dashboard-ingress-config.yaml"
+
+    - name: Get Dashboard admin user token (for display only)
+      ansible.builtin.command: "kubectl create token {{ dashboard_admin_user_name }} -n {{ dashboard_namespace }}"
+      register: dashboard_token_result
+      changed_when: false
+
+    - name: Show Dashboard login information
+      ansible.builtin.debug:
+        msg:
+          - "Kubernetes Dashboard is being set up."
+          - "1. Add to your HOSTS file (on your computer, not VM): '{{ nginx_ingress_loadbalancer_ip }} {{ dashboard_hostname }}'"
+          - "2. Access Dashboard at: https://{{ dashboard_hostname }} (accept self-signed certificate warning)"
+          - "3. Login with token (will be displayed if generation is successful): {{ dashboard_token_result.stdout | default('Token generation might still be in progress or failed.') }}"
+
+    # --- Step 23: Install Istio ---
+    - name: Download Istio 1.25.2
+      get_url:
+        url: https://github.com/istio/istio/releases/download/1.25.2/istio-1.25.2-linux-amd64.tar.gz
+        dest: /tmp/istio.tar.gz
+        mode: '0644'
+      become: true
+
+    - name: Extract Istio
+      ansible.builtin.unarchive:
+        src: /tmp/istio.tar.gz
+        dest: /home/vagrant/
+        remote_src: yes
+      become: true
+      args:
+        creates: /home/vagrant/istio-1.25.2/manifests
+
+    - name: Add istioctl to PATH
+      lineinfile:
+        path: /home/vagrant/.bashrc
+        line: 'export PATH=$PATH:/home/vagrant/istio-1.25.2/bin'
+        insertafter: EOF
+        state: present
+
+    - name: Run istioctl install (demo profile)
+      shell: |
+        istioctl install --set profile=demo -y
+      args:
+        creates: /home/vagrant/istio-1.25.2/manifests

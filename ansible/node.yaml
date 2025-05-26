@@ -1,20 +1,16 @@
----
-- hosts: workers
+- name: Setting up Kubernetes workers
+  hosts: node-*
   become: yes
+  gather_facts: no
+
   tasks:
-    - name: Get join command from controller via local vagrant
-      ansible.builtin.command: vagrant ssh ctrl -c "sudo kubeadm token create --print-join-command"
-      register: kubeadm_join_command_result
-      delegate_to: localhost
-      become: no  
-      run_once: true
+    - name: Generate join command from controller
+      command: kubeadm token create --print-join-command
+      delegate_to: ctrl
+      register: join_command
       changed_when: false
-      
-    - name: Debug print join command
-      ansible.builtin.debug:
-        var: kubeadm_join_command_result.stdout
-        
-    - name: Join the worker node to the Kubernetes cluster
-      ansible.builtin.shell: "{{ kubeadm_join_command_result.stdout }}"
+
+    - name: Join worker node to the cluster
+      shell: "{{ join_command.stdout }} --ignore-preflight-errors=NumCPU"
       args:
         creates: /etc/kubernetes/kubelet.conf
