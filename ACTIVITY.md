@@ -94,3 +94,6 @@ Merged: https://github.com/remla25-team14/model-training/pull/6
 
 -- Shael Hakimi --
 Created PR: https://github.com/remla25-team14/app/pull/5
+Approved PR: https://github.com/remla25-team14/operation/pull/13
+Created PR: https://github.com/remla25-team14/model-training/pull/6
+Merged PR: https://github.com/remla25-team14/model-training/pull/4
