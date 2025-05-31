@@ -5,7 +5,7 @@ metadata:
   labels:
     app: {{ include "sentiment-chart.fullname" . }}-app-serv
 spec:
-  type: NodePort
+  type: ClusterIP
   selector:
     app: {{ include "sentiment-chart.fullname" . }}-app
   ports:
