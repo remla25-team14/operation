@@ -17,8 +17,8 @@
       apt:
         update_cache: yes
 
-    - name: reboot and wait for reboot to complete
-      reboot:
+    # - name: reboot and wait for reboot to complete, disable in testing
+    #   reboot:
     
     - name: Add SSH public key to vagrant user
       ansible.posix.authorized_key:
@@ -27,6 +27,13 @@
         key: "{{ lookup('file', '../ssh_keys/your_ssh_key.pub') }}"
         manage_dir: yes
     
+    - name: Permanently remove SWAP from /etc/fstab
+      ansible.builtin.lineinfile:
+        path: /etc/fstab
+        regexp: '/swapfile'
+        state: absent
+        backrefs: yes
+
     - name: Load br_netfilter module immediately
       modprobe:
         name: br_netfilter
@@ -175,4 +182,4 @@
       service:
         name: kubelet
         enabled: yes
-
+        state: started
