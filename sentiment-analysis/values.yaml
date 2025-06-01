@@ -4,11 +4,10 @@ prefix: sentiment
 model:
   image: ghcr.io/remla25-team14/model-service:latest
   port: 5000
-  artifactId: "3143858901"
-  modelurl: version2-sentiment-chart-model
+  modelurl: localhost
 
 app:
-  image: ghcr.io/remla25-team14/app/app:sha-06d792c
+  image: ghcr.io/remla25-team14/app/app:latest
   port: 5001
   servicePort: 80
 
@@ -30,9 +29,19 @@ ingress:
   className: nginx
 
 prometheus:
+  enabled: true
   prometheusSpec:
     externalUrl: http://prometheus.{{ .Values.ingress.host }}
     routePrefix: /
+  serviceMonitors:
+    - name: review-length-metrics
+      selector:
+        matchLabels:
+          app: sentiment-stack
+      endpoints:
+        - port: app-http
+          path: /metrics
+          interval: 15s
 
 grafana:
   enabled: true
@@ -47,3 +56,7 @@ grafana:
   env:
     GF_SERVER_ROOT_URL: grafana.{{ .Values.ingress.host }}
     GF_SERVER_SERVE_FROM_SUB_PATH: "false"
+  dashboardsConfigMaps:
+    - name: review-length-experiment
+      files:
+        - dashboards/review-length-experiment.json
