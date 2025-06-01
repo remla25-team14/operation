@@ -100,7 +100,7 @@
       apt:
         name:
           - containerd=1.7.24-0ubuntu1~24.04.2
-          - runc=1.1.12-0ubuntu3.1
+          - runc=1.1.12-0ubuntu3
         state: present
         update_cache: yes
 
