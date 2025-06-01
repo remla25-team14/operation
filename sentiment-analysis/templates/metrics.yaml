@@ -1,0 +1,17 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: review-length-metrics
+  labels:
+    release: prometheus
+spec:
+  selector:
+    matchLabels:
+      app: sentiment-stack
+  endpoints:
+  - port: app-http
+    path: /metrics
+    interval: 15s
+  namespaceSelector:
+    matchNames:
+    - default 

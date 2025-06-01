@@ -1,47 +1,105 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "sentiment-chart.fullname" . }}-app
+  name: sentiment-app-control
   labels:
-    app: {{ include "sentiment-chart.fullname" . }}-app
+    app: sentiment-stack
+    version: control
 spec:
-  replicas: 1  # Number of pod replicas
+  replicas: 1
   selector:
     matchLabels:
-      app: {{ include "sentiment-chart.fullname" . }}-app
+      app: sentiment-stack
+      version: control
   template:
     metadata:
       labels:
-        app: {{ include "sentiment-chart.fullname" . }}-app
+        app: sentiment-stack
+        version: control
     spec:
       containers:
-        - name: sentiment-app
-          image: {{ .Values.app.image }}
-          imagePullPolicy: Always
-          ports:
-            - containerPort: {{ .Values.app.port }}
-          readinessProbe:
+      - name: sentiment-app-container
+        image: ghcr.io/remla25-team14/app/app:latest
+        imagePullPolicy: Always
+        ports:
+        - name: app-http
+          containerPort: 5001
+        env:
+        - name: MODEL_SERVICE_URL
+          value: "http://localhost:5000"
+        - name: APP_VERSION
+          value: "control"
+        - name: EXPERIMENT_VERSION
+          value: "control"
+        livenessProbe:
           httpGet:
             path: /
-            port: 5001
-          initialDelaySeconds: 5
-          periodSeconds: 5
-          livenessProbe:
-            httpGet:
-              path: /
-              port: 5001
-            initialDelaySeconds: 15
-            periodSeconds: 20
-          env:
-            - name: MODEL_SERVICE_URL
-              value: "http://{{ .Values.model.modelurl }}:{{ .Values.model.port }}"
-            - name: APP_MODE
-              valueFrom:
-                configMapKeyRef:
-                  name: dummy-config
-                  key: APP_MODE
-            - name: LOG_LEVEL
-              valueFrom:
-                configMapKeyRef:
-                  name: dummy-config
-                  key: LOG_LEVEL
+            port: app-http
+          initialDelaySeconds: 20
+          periodSeconds: 20
+        readinessProbe:
+          httpGet:
+            path: /
+            port: app-http
+          initialDelaySeconds: 10
+          periodSeconds: 10
+      - name: model-service-container
+        image: ghcr.io/remla25-team14/model-service:latest
+        imagePullPolicy: Always
+        ports:
+        - name: model-http
+          containerPort: 5000
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sentiment-app-experimental
+  labels:
+    app: sentiment-stack
+    version: experimental
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sentiment-stack
+      version: experimental
+  template:
+    metadata:
+      labels:
+        app: sentiment-stack
+        version: experimental
+    spec:
+      containers:
+      - name: sentiment-app-container
+        image: ghcr.io/remla25-team14/app/app:latest
+        imagePullPolicy: Always
+        ports:
+        - name: app-http
+          containerPort: 5001
+        env:
+        - name: MODEL_SERVICE_URL
+          value: "http://localhost:5000"
+        - name: APP_VERSION
+          value: "experimental"
+        - name: EXPERIMENT_VERSION
+          value: "experimental"
+        - name: ENABLE_SHORT_REVIEW_WARNING
+          value: "true"
+        livenessProbe:
+          httpGet:
+            path: /
+            port: app-http
+          initialDelaySeconds: 20
+          periodSeconds: 20
+        readinessProbe:
+          httpGet:
+            path: /
+            port: app-http
+          initialDelaySeconds: 10
+          periodSeconds: 10
+      - name: model-service-container
+        image: ghcr.io/remla25-team14/model-service:latest
+        imagePullPolicy: Always
+        ports:
+        - name: model-http
+          containerPort: 5000
