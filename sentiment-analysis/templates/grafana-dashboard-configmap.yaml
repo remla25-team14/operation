@@ -6,4 +6,4 @@ metadata:
     grafana_dashboard: "1"
 data:
   sentiment-dashboard.json: |
-{{ .Files.Get "dashboards/sentiment-dashboard.json" | indent 4 }}
+   {{ .Files.Get "dashboards/sentiment-dashboard.json" | indent 4 }}
