@@ -1,5 +1,28 @@
 # Helm Chart - Sentiment Analysis App
 
+## Table of Contents
+1. [Overview](#helm-chart---sentiment-analysis-app)  
+2. [Prerequisites](#prerequisites)  
+3. [Features](#this-helm-chart-supports)  
+4. [Configuration Reference (`values.yaml`)](#configuration-reference-valuesyaml)  
+   - [Global](#global)  
+   - [Model Service](#model-service)  
+   - [Application (App)](#application-app)  
+   - [GitHub Integration](#github-integration)  
+   - [Monitoring (Prometheus & Grafana)](#monitoring-prometheus--grafana)  
+     - [Grafana](#grafana)  
+   - [Ingress Configuration](#ingress-configuration)  
+   - [A/B Testing (Canary Releases with Istio)](#ab-testing-canary-releases-with-istio)  
+   - [Shared Volume (optional)](#shared-volume-optional)  
+5. [Testing with Minikube](#testing-with-minikube)  
+6. [Create GitHub Token Secret](#2-create-secret)  
+7. [Install the Chart](#3-install-the-chart)  
+8. [Verify Installation](#verify-installation)  
+9. [Accessing the Grafana Dashboard](#accessing-the-grafana-dashboard)  
+10. [Sticky Session for A/B Testing](#sticky-session)  
+11. [Note for the Reviewers](#note-for-the-reviewers)
+
+
 This Helm chart deploys the sentiment analysis web application and its model service to a Kubernetes cluster, with optional Prometheus monitoring.
 
 ---
@@ -24,7 +47,7 @@ This Helm chart supports:
 
 ---
 
-## 🔧 Configuration Reference (`values.yaml`)
+## Configuration Reference (`values.yaml`)
 
 ### Global
 
@@ -90,7 +113,7 @@ This Helm chart supports:
 
 ---
 
-### 🚪 Ingress Configuration
+### Ingress Configuration
 
 | Key                      | Type     | Description                                                  |
 |--------------------------|----------|--------------------------------------------------------------|
@@ -113,7 +136,7 @@ This Helm chart supports:
 
 ---
 
-### 📂 Shared Volume (optional)
+### Shared Volume (optional)
 
 | Key                   | Type     | Description                                         |
 |------------------------|----------|-----------------------------------------------------|
