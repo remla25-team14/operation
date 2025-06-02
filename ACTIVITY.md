@@ -108,3 +108,12 @@ Created PR: https://github.com/remla25-team14/model-training/pull/5 (Addresses A
 Merged PR: https://github.com/remla25-team14/model-training/pull/2
 Approved PR: https://github.com/remla25-team14/model-training/pull/2
 Merged PR: https://github.com/remla25-team14/operation/pull/13
+
+-- Ilma Jaganjac: --
+Created PR: https://github.com/remla25-team14/app/pull/6
+Created PR: https://github.com/remla25-team14/lib-ml/pull/5
+Created PR: https://github.com/remla25-team14/lib-version/pull/2
+Created PR: https://github.com/remla25-team14/model-service/pull/5
+Merged: 
+Approved: 
+
