@@ -121,3 +121,10 @@ Approved: https://github.com/remla25-team14/operation/pull/28#pullrequestreview-
 -- Zeyu Fan --
 Created PR: https://github.com/remla25-team14/operation/pull/28
 Approved PR: https://github.com/remla25-team14/operation/pull/29
+
+-- Shael Hakimi: --
+Approved PR: https://github.com/remla25-team14/operation/pull/13
+Approved PR: https://github.com/remla25-team14/operation/pull/18
+Merged PR: https://github.com/remla25-team14/operation/pull/18
+Created PR: https://github.com/remla25-team14/model-training/pull/10
+Created PR: https://github.com/remla25-team14/model-training/pull/11
