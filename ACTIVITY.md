@@ -101,6 +101,12 @@ Approved PR: https://github.com/remla25-team14/model-training/pull/2
 -- Reeve Lorena: --
 Created PR: https://github.com/remla25-team14/operation/pull/13 (Addresses A3 1.1)
 
+W5
+-- Ciprian Bica --
+Created PR: https://github.com/remla25-team14/operation/pull/18
+Created PR: https://github.com/remla25-team14/model-training/pull/9 (Addresses A4)
+Approved PR: https://github.com/remla25-team14/app/pull/5 
+
 # W6
 -- Reeve Lorena: --
 Created PR: https://github.com/remla25-team14/model-training/pull/8 (Addresses A4)
@@ -128,3 +134,8 @@ Approved PR: https://github.com/remla25-team14/operation/pull/18
 Merged PR: https://github.com/remla25-team14/operation/pull/18
 Created PR: https://github.com/remla25-team14/model-training/pull/10
 Created PR: https://github.com/remla25-team14/model-training/pull/11
+
+W6
+-- Ciprian Bica --
+Created PR: https://github.com/remla25-team14/operation/pull/26 (Addresses A5)
+Approved PR: https://github.com/remla25-team14/model-training/pull/11#pullrequestreview-2877526972
