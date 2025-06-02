@@ -1,98 +1,123 @@
-# Continuous Experimentation: Feedback Button Position
+# Continuous Experimentation: Sentiment Analysis Model Comparison
 
 ## Experiment Overview
 
-This experiment tests the hypothesis that placing feedback buttons closer to the sentiment analysis result will increase user engagement with the feedback system.
+We are conducting an A/B test to compare two versions of our sentiment analysis model service. The experiment aims to evaluate whether our new model version (v2) provides better accuracy and user satisfaction compared to the current version (v1).
 
-### Base Design (v1)
-- Feedback buttons are placed below the sentiment result
-- Users need to scroll down to provide feedback
-- Clear separation between result and feedback sections
+### Base Design vs. New Design
 
-### Experimental Design (v2)
-- Feedback buttons are placed directly next to the sentiment result
-- Compact "Correct?" prompt instead of "Was this analysis correct?"
-- Visual indicators (✓ and ✗) added to feedback buttons
-- Color-coded buttons (green for yes, red for no)
+**Base Design (v1)**:
+- Uses the original sentiment analysis model
+- Basic bag-of-words (BoW) vectorization
+- Standard classification threshold
+
+**New Design (v2)**:
+- Enhanced sentiment analysis model with user feedback incorporation
+- Improved text preprocessing
+- Optimized classification threshold based on historical data
 
 ## Hypothesis
 
-**Primary Hypothesis**: Moving feedback buttons closer to the sentiment result and making them more visually appealing will increase the feedback submission rate by at least 20%.
+Our falsifiable hypothesis is that the new model version (v2) will:
+1. Provide more accurate sentiment predictions (measured through user feedback)
+2. Maintain or improve response times
+3. Show a more balanced distribution of positive/negative predictions
 
-### Supporting Hypotheses:
-1. Users will submit feedback more quickly due to reduced cognitive load
-2. The feedback accuracy (correlation between model prediction and user feedback) will remain consistent between versions
+## Metrics and Decision Process
 
-## Metrics
+We are collecting the following metrics through Prometheus and visualizing them in Grafana:
 
-The following metrics are collected to evaluate the experiment:
+1. **Positive Sentiment Ratio by Version**
+   - Tracks the ratio of positive to total predictions for each version
+   - Helps identify if one version is biased towards positive/negative predictions
+   - Expected: v2 should show a more balanced ratio closer to historical data
 
-1. **Feedback Submission Rate**
-   - Metric: `feedback_submissions_total`
-   - Type: Counter
-   - Purpose: Track total number of feedback submissions per version
+2. **Model Response Time**
+   - Measures the latency of sentiment predictions
+   - Critical for user experience
+   - Requirement: v2 should not increase average response time by more than 10%
 
-2. **Time to Feedback**
-   - Metric: `feedback_timing_seconds`
-   - Type: Histogram
-   - Buckets: [1s, 5s, 10s, 30s, 60s, 120s]
-   - Purpose: Measure how quickly users provide feedback after seeing results
+3. **Sentiment Predictions by Version**
+   - Shows the distribution of predictions (positive/negative) for each version
+   - Helps identify potential biases or shifts in prediction patterns
+   - Expected: v2 should maintain a reasonable distribution based on domain knowledge
 
-3. **Feedback Accuracy**
-   - Metric: `feedback_accuracy_total{accuracy="correct|incorrect"}`
-   - Type: Counter with labels
-   - Purpose: Monitor if the UI change affects agreement between model and users
+4. **Model Accuracy by Version**
+   - Based on user feedback (correct/incorrect predictions)
+   - Direct measure of model performance
+   - Success Criteria: v2 should show at least 5% improvement in accuracy
 
-## Decision Process
+## Decision Making Process
 
-### Data Collection
-- Both versions will run simultaneously using Istio traffic splitting
-- Users are randomly assigned to versions using the `x-user-experiment` header
-- Data will be collected for a minimum of 2 weeks or 1000 reviews per version
+The experiment will run for a minimum of 2 weeks, with traffic split 50/50 between versions. The decision to adopt v2 will be based on:
 
-### Success Criteria
-The experiment will be considered successful if:
-1. Feedback submission rate increases by ≥20% in v2
-2. Median time to feedback decreases by ≥25% in v2
-3. Feedback accuracy remains within ±5% between versions
+1. **Primary Metric**: User-reported accuracy
+   - Must show statistically significant improvement (p < 0.05)
+   - Minimum 5% absolute improvement over v1
 
-### Grafana Dashboard
-The experiment is monitored through a dedicated Grafana dashboard that shows:
-1. Feedback submission rates comparison (v1 vs v2)
-2. Time to feedback distribution
-3. Feedback accuracy rates
-4. Total reviews and feedback counts
+2. **Secondary Metrics**:
+   - Response time: Must not degrade by more than 10%
+   - Sentiment ratio: Should be within ±10% of historical baseline
+   - No significant increase in error rates or failures
 
-[Dashboard Screenshot to be added after deployment]
+3. **Monitoring Process**:
+   - Daily review of Grafana dashboard metrics
+   - Weekly statistical significance testing
+   - Continuous monitoring of system health and error rates
 
-### Rollout Plan
-1. Deploy v2 to 50% of users
-2. Monitor metrics for 2 weeks
-3. If success criteria are met:
-   - Roll out v2 to 100% of users
-   - Document learnings
-4. If criteria are not met:
-   - Analyze failure points
-   - Consider alternative designs
-   - Roll back to v1
+## Implementation Details
 
-## Technical Implementation
+The experiment is implemented using:
+- Istio for traffic splitting (based on request header `x-user-experiment`)
+- Prometheus for metrics collection
+- Grafana for visualization and monitoring
+- Custom metrics in our application code
 
-### Version Control
-- v1: Current implementation in main branch
-- v2: Experimental implementation in `feature/feedback-position` branch
+### Traffic Splitting Configuration
+```yaml
+traffic:
+  abTesting:
+    enabled: true
+    matchHeader: x-user-experiment
+    controlValue: A
+    experimentValue: B
+    appVersions:
+      - v1
+      - v2
+    modelVersions:
+      - v1
+      - v2
+```
 
-### Traffic Management
-Using Istio for traffic splitting:
-- 50% traffic to v1 (control)
-- 50% traffic to v2 (experiment)
-- Split based on `x-user-experiment` header
+### Metrics Implementation
+- Application-level metrics for sentiment analysis
+- Response time tracking
+- User feedback collection
+- Error rate monitoring
 
-### Monitoring
-- Prometheus metrics exposed via `/metrics` endpoint
-- Custom metrics added for experiment tracking
-- Grafana dashboard for real-time monitoring
+## Dashboard Visualization
 
-## Current Status
+Our Grafana dashboard (search for Sentiment Analysis A/B Testing) provides real-time visualization of:
+- Sentiment prediction distributions
+- Response time comparisons
+- Accuracy metrics based on user feedback
+- Error rates and system health
 
-[To be updated during the experiment] 
+![Grafana Dashboard for Sentiment Analysis A/B Testing](../images/grafana_experiment.png)
+
+The dashboard shows:
+- Top Left: Positive Sentiment Ratio by Version - tracking the proportion of positive predictions
+- Top Right: Model Response Time - monitoring latency and performance
+- Bottom Left: Sentiment Predictions by Version - showing the distribution of predictions
+- Bottom Right: Model Accuracy by Version - displaying feedback-based accuracy metrics
+
+## Rollback Plan
+
+If any of the following conditions are met, we will immediately rollback to v1:
+1. Error rate increases by more than 5%
+2. Response time degrades by more than 20%
+3. Critical bugs or security issues are discovered
+
+## Results and Conclusions
+
+[To be filled after the experiment completion] 

@@ -52,8 +52,8 @@ prometheus:
 grafana:
   enabled: true
   dashboard:
-    uid: "sentiment-analysis"
-    title: "Sentiment Analysis"
+    uid: "sentiment-analysis-ab"
+    title: "Sentiment Analysis A/B Testing"
     refreshInterval: "5s"
     tags: ["sentiment", "monitoring"]
     editable: true

@@ -1,9 +1,11 @@
+{{- if .Values.grafana.enabled }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ include "sentiment-chart.fullname" . }}-dashboards
+  name: {{ include "sentiment-chart.fullname" . }}-grafana-dashboard
   labels:
     grafana_dashboard: "1"
 data:
-  sentiment-dashboard.json: |
-   {{ .Files.Get "dashboards/sentiment-dashboard.json" | indent 4 }}
+  dashboard.json: |-
+{{ .Files.Get "dashboards/sentiment-dashboard.json" | indent 4 }}
+{{- end }}
