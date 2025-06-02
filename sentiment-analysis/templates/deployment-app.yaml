@@ -22,7 +22,10 @@ spec:
       containers:
         - name: sentiment-app
           image: {{ index $.Values.app.images $version }}
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: MODEL_SERVICE_URL
+              value: "http://{{ include "sentiment-chart.fullname" $ }}-model:{{ $.Values.model.port }}"
           ports:
             - containerPort: {{ $.Values.app.port }}
           readinessProbe:
@@ -37,19 +40,6 @@ spec:
               port: 5001
             initialDelaySeconds: 15
             periodSeconds: 20
-          env:
-            - name: MODEL_SERVICE_URL
-              value: "http://{{ $.Values.model.modelurl }}:{{ $.Values.model.port }}"
-            - name: APP_MODE
-              valueFrom:
-                configMapKeyRef:
-                  name: dummy-config
-                  key: APP_MODE
-            - name: LOG_LEVEL
-              valueFrom:
-                configMapKeyRef:
-                  name: dummy-config
-                  key: LOG_LEVEL
 ---
 {{- end }}
 {{- else }}
@@ -73,7 +63,10 @@ spec:
       containers:
         - name: sentiment-app
           image: {{ .Values.app.image }}
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: MODEL_SERVICE_URL
+              value: "http://{{ include "sentiment-chart.fullname" . }}-model:{{ .Values.model.port }}"
           ports:
             - containerPort: {{ .Values.app.port }}
           readinessProbe:
@@ -88,17 +81,62 @@ spec:
               port: 5001
             initialDelaySeconds: 15
             periodSeconds: 20
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "sentiment-chart.fullname" . }}-app-v1
+  labels:
+    app: {{ include "sentiment-chart.fullname" . }}-app
+    version: v1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ include "sentiment-chart.fullname" . }}-app
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: {{ include "sentiment-chart.fullname" . }}-app
+        version: v1
+    spec:
+      containers:
+        - name: sentiment-app
+          image: {{ .Values.app.images.v1 }}
+          imagePullPolicy: IfNotPresent
           env:
             - name: MODEL_SERVICE_URL
-              value: "http://{{ .Values.model.modelurl }}:{{ .Values.model.port }}"
-            - name: APP_MODE
-              valueFrom:
-                configMapKeyRef:
-                  name: dummy-config
-                  key: APP_MODE
-            - name: LOG_LEVEL
-              valueFrom:
-                configMapKeyRef:
-                  name: dummy-config
-                  key: LOG_LEVEL
+              value: "http://{{ include "sentiment-chart.fullname" . }}-model-service:{{ .Values.model.port }}"
+          ports:
+            - containerPort: {{ .Values.app.port }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "sentiment-chart.fullname" . }}-app-v2
+  labels:
+    app: {{ include "sentiment-chart.fullname" . }}-app
+    version: v2
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ include "sentiment-chart.fullname" . }}-app
+      version: v2
+  template:
+    metadata:
+      labels:
+        app: {{ include "sentiment-chart.fullname" . }}-app
+        version: v2
+    spec:
+      containers:
+        - name: sentiment-app
+          image: {{ .Values.app.images.v2 }}
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: MODEL_SERVICE_URL
+              value: "http://{{ include "sentiment-chart.fullname" . }}-model-service:{{ .Values.model.port }}"
+          ports:
+            - containerPort: {{ .Values.app.port }}
 {{- end }}

@@ -1,18 +1,21 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "sentiment-chart.fullname" . }}-model
+  name: {{ include "sentiment-chart.fullname" . }}-model-v1
   labels:
     app: {{ include "sentiment-chart.fullname" . }}-model
+    version: v1
 spec:
   replicas: 1
   selector:
     matchLabels:
       app: {{ include "sentiment-chart.fullname" . }}-model
+      version: v1
   template:
     metadata:
       labels:
         app: {{ include "sentiment-chart.fullname" . }}-model
+        version: v1
     spec:
       containers:
         - name: sentiment-model
@@ -26,6 +29,55 @@ spec:
                   key: {{ .Values.githubTokenKey }}
             - name: ARTIFACT_ID
               value: "{{ .Values.model.artifactId }}"
+            - name: SENTIMENT_THRESHOLD
+              value: "0.5"
+          ports:
+            - containerPort: {{ .Values.model.port }}
+          {{- if .Values.sharedVolume.enabled }}
+          volumeMounts:
+            - name: shared-volume
+              mountPath: {{ .Values.sharedVolume.path }}
+          {{- end }}
+      {{- if .Values.sharedVolume.enabled }}
+      volumes:
+        - name: shared-volume
+          hostPath:
+            path: {{ .Values.sharedVolume.hostPath }}
+      {{- end }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "sentiment-chart.fullname" . }}-model-v2
+  labels:
+    app: {{ include "sentiment-chart.fullname" . }}-model
+    version: v2
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ include "sentiment-chart.fullname" . }}-model
+      version: v2
+  template:
+    metadata:
+      labels:
+        app: {{ include "sentiment-chart.fullname" . }}-model
+        version: v2
+    spec:
+      containers:
+        - name: sentiment-model
+          image: {{ .Values.model.image }}
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: GITHUB_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.githubTokenSecretName }}
+                  key: {{ .Values.githubTokenKey }}
+            - name: ARTIFACT_ID
+              value: "{{ .Values.model.artifactId }}"
+            - name: SENTIMENT_THRESHOLD
+              value: "0.7"
           ports:
             - containerPort: {{ .Values.model.port }}
           {{- if .Values.sharedVolume.enabled }}

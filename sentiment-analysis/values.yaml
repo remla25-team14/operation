@@ -5,7 +5,7 @@ model:
   image: ghcr.io/remla25-team14/model-service:v0.1.2
   port: 5000
   artifactId: "3143858901"
-  modelurl: version2-sentiment-chart-model
+  modelurl: sentiment-sentiment-chart-model
 
 # app:
 #  image: ghcr.io/remla25-team14/app/app:sha-06d792c
