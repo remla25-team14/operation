@@ -17,7 +17,7 @@ Helm >= v3.0.0
 This Helm chart supports:
 
 - Istio or NGINX ingress controllers
-- A/B testing (canary releases) using Istio routing
+- A/B testing (canary releases) using Istio routing with Sticky sessions.
 - Prometheus/Grafana monitoring
 - Versioned app and model deployments
 - Configurable GitHub token for private artifact access
@@ -220,12 +220,58 @@ Once the helm chart is deployed, you can access the grafana dashboard. Complete 
 kubectl get secret myprom-grafana -o jsonpath="{.data.admin-password}" | base64 --decode; echo
 ```
 
-4. Access Grafana:
+2. Access Grafana:
    - Open your browser and go to Access URL: http://grafana.{{ App service endpoint }}
    - Login with:
      * Username: `admin`
      * Password: (use the password obtained in step 1)
 
+## Sticky Session
+
+Sticky Sessions for A/B Testing
+
+This chart supports **sticky session routing** using Istio’s header-based traffic management to implement basic A/B testing.
+
+A sticky session means that:
+- Once a user is routed to **version A or B** of the app,
+- They will **continue to see the same version** across future requests,
+- As long as they continue sending the same identifying header or cookie.
+Customizing the Sticky Session Header
+
+This Helm chart uses a configurable HTTP header to implement **sticky session-based A/B testing** with Istio.
+
+By default, the chart uses:
+
+```yaml
+traffic:
+  abTesting:
+    matchHeader: x-user-experiment
+```
+
+To change the header name you can either change it in the `chart.yaml` file, like above or you can set it in the Helm Cli like below
+
+```bash
+helm upgrade --install mysentiment ./sentiment-analysis \
+  --set prefix=mysentiment \
+  --set traffic.abTesting.enabled=true \
+  --set traffic.abTesting.matchHeader=x-ab-group \
+  --set traffic.abTesting.experimentValue=B \
+  --set traffic.abTesting.controlValue=A
+```
+
+Once deployed, test using your new header name:
+
+No header or `x-ab-group: A`
+
+```bash
+curl http://<hostname>/
+```
+
+With x-ab-group: B
+
+```bash
+curl curl -H "x-ab-group: B" http://<hostname>/
+```
 ---
 # Note for the Reviewers
 
