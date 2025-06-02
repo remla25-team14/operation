@@ -113,7 +113,7 @@ Throughout this entire request lifecycle, both our app and model service continu
 
 Prometheus scrapes these metrics every 5 seconds, and Grafana displays them in our real-time dashboards, giving us immediate visibility into system performance.
 
-## 3. Deployed Resources (Quick Reference)
+## 3. Deployed Resources 
 
 | Resource Type | Name(s) / Label Pattern | Purpose & Implementation Notes |
 |---------------|------------------------|--------------------------------|
@@ -142,5 +142,3 @@ Our complete project is distributed across several specialized repositories:
 - **model-service** - https://github.com/remla25-team14/model-service
 - **model-training** - https://github.com/remla25-team14/model-training
 
-### **Additional Learning Resources:**
-For those interested in diving deeper into the technologies and concepts we've implemented, we recommend exploring the official documentation for Kubernetes, Istio, Prometheus, and Grafana. Each of these technologies has extensive community resources and tutorials that can help you understand the underlying principles behind our architectural decisions.
