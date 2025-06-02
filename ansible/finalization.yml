@@ -263,31 +263,95 @@
           - "3. Login with token (will be displayed if generation is successful): {{ dashboard_token_result.stdout | default('Token generation might still be in progress or failed.') }}"
 
     # --- Step 23: Install Istio ---
-    - name: Download Istio 1.25.2
-      get_url:
-        url: https://github.com/istio/istio/releases/download/1.25.2/istio-1.25.2-linux-amd64.tar.gz
-        dest: /tmp/istio.tar.gz
+# ...existing code...
+
+    # --- Step 23: Install Istio ---
+    - name: Download Istio {{ istio_version }}
+      ansible.builtin.get_url:
+        url: "{{ istio_download_url }}"
+        dest: "/tmp/istio-{{ istio_version }}-linux-amd64.tar.gz"
         mode: '0644'
-      become: true
+      become: no
 
     - name: Extract Istio
       ansible.builtin.unarchive:
-        src: /tmp/istio.tar.gz
-        dest: /home/vagrant/
+        src: "/tmp/istio-{{ istio_version }}-linux-amd64.tar.gz"
+        dest: "{{ istio_extract_dest }}"
         remote_src: yes
-      become: true
+        owner: vagrant
+        group: vagrant
+      become: yes
       args:
-        creates: /home/vagrant/istio-1.25.2/manifests
+        creates: "{{ istio_extract_dest }}/{{ istio_dir_name }}/bin/istioctl"
 
-    - name: Add istioctl to PATH
-      lineinfile:
+    - name: Add istioctl to PATH in .bashrc
+      ansible.builtin.lineinfile:
         path: /home/vagrant/.bashrc
-        line: 'export PATH=$PATH:/home/vagrant/istio-1.25.2/bin'
+        line: 'export PATH=$PATH:{{ istio_extract_dest }}/{{ istio_dir_name }}/bin'
         insertafter: EOF
         state: present
+      become: no
 
-    - name: Run istioctl install (demo profile)
-      shell: |
-        istioctl install --set profile=demo -y
-      args:
-        creates: /home/vagrant/istio-1.25.2/manifests
+    - name: Check if Istio is already installed
+      kubernetes.core.k8s_info:
+        api_version: v1
+        kind: Namespace
+        name: "{{ istio_namespace }}"
+      register: istio_namespace_check
+      failed_when: false
+
+    - name: Install Istio with demo profile
+      ansible.builtin.shell: |
+        export PATH=$PATH:{{ istio_extract_dest }}/{{ istio_dir_name }}/bin
+        istioctl install --set profile={{ istio_install_profile }} -y
+      environment:
+        KUBECONFIG: "{{ kubeconfig_path_on_controller }}"
+      become: no
+      when: istio_namespace_check.resources | length == 0
+      register: istio_install_result
+
+    - name: Wait for Istio system pods to be ready
+      kubernetes.core.k8s_info:
+        api_version: v1
+        kind: Pod
+        namespace: "{{ istio_namespace }}"
+        label_selectors:
+          - app=istiod
+        wait: true
+        wait_condition:
+          type: Ready
+          status: "True"
+        wait_sleep: 10
+        wait_timeout: 300
+      when: istio_install_result is changed
+
+    - name: Verify Istio CRDs are installed
+      kubernetes.core.k8s_info:
+        api_version: apiextensions.k8s.io/v1
+        kind: CustomResourceDefinition
+        name: "{{ item }}"
+      register: istio_crds_check
+      failed_when: false
+      loop:
+        - gateways.networking.istio.io
+        - virtualservices.networking.istio.io
+        - destinationrules.networking.istio.io
+
+    - name: Display Istio installation status
+      ansible.builtin.debug:
+        msg:
+          - "Istio installation completed"
+          - "Istio namespace: {{ istio_namespace }}"
+          - "Available CRDs: {{ istio_crds_check.results | selectattr('resources', 'defined') | selectattr('resources', '!=', []) | map(attribute='item') | list }}"
+
+    - name: Enable Istio injection for default namespace
+      kubernetes.core.k8s:
+        api_version: v1
+        kind: Namespace
+        name: default
+        state: present
+        definition:
+          metadata:
+            labels:
+              istio-injection: enabled
+      when: istio_install_result is changed
