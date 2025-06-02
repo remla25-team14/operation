@@ -93,6 +93,7 @@ The approach aligns with the four vendor-neutral **GitOps principles** formalise
 | **Drift Incidents**       | Argo CD metric `argocd_app_sync_total{status="OutOfSync"}`   | W incidents / week   |
 | **Change Failure Rate**   | `argocd_app_sync_total{phase="Failed"}` / total syncs        | < Y %                |
 | **MTTR** (rollback time)  | `argocd_app_rollback_total` timestamps                       | ↓ ≥ Z %              |
+
 (W, X, Y, Z are flexible metric thresholds for different levels of experiments.)
 
 ### 3.2 Method
