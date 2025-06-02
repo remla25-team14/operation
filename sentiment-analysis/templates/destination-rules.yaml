@@ -1,0 +1,28 @@
+{{- if .Values.traffic.abTesting.enabled }}
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: {{ include "sentiment-chart.fullname" . }}-app-destination
+spec:
+  host: {{ include "sentiment-chart.fullname" . }}-app-service
+  subsets:
+  {{- range $version := .Values.traffic.abTesting.appVersions }}
+    - name: {{ $version }}
+      labels:
+        version: {{ $version }}
+  {{- end }}
+
+---
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: {{ include "sentiment-chart.fullname" . }}-model-destination
+spec:
+  host: {{ .Values.model.modelurl }}
+  subsets:
+  {{- range $version := .Values.traffic.abTesting.modelVersions }}
+    - name: {{ $version }}
+      labels:
+        version: {{ $version }}
+  {{- end }}
+{{- end }}

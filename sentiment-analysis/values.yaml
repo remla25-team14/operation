@@ -2,15 +2,23 @@ fullnameOverride: ""
 prefix: sentiment
 
 model:
-  image: ghcr.io/remla25-team14/model-service:latest
+  image: ghcr.io/remla25-team14/model-service:v0.1.2
   port: 5000
   artifactId: "3143858901"
   modelurl: version2-sentiment-chart-model
 
+# app:
+#  image: ghcr.io/remla25-team14/app/app:sha-06d792c
+#  port: 5001
+#  servicePort: 80
+
 app:
-  image: ghcr.io/remla25-team14/app/app:sha-06d792c
   port: 5001
   servicePort: 80
+  image: ghcr.io/remla25-team14/app/app:sha-06d792c
+  images:
+    v1: ghcr.io/remla25-team14/app/app:sha-06d792c
+    v2: ghcr.io/remla25-team14/app/app:sha-06d792c
 
 githubTokenSecretName: github-token
 githubTokenKey: GITHUB_TOKEN
@@ -26,6 +34,7 @@ sharedVolume:
 
 ingress:
   enabled: true
+  controller: istio
   host: sentiment.local
   className: nginx
 
@@ -65,3 +74,4 @@ rateLimit:
   tokensPerFill: 10
   fillInterval: "60s"
   blockDuration: "60s"
+

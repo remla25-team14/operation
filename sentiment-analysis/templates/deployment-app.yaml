@@ -1,3 +1,59 @@
+{{- if .Values.traffic.abTesting.enabled }}
+{{- range $version := .Values.traffic.abTesting.appVersions }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "sentiment-chart.fullname" $ }}-app-{{ $version }}
+  labels:
+    app: {{ include "sentiment-chart.fullname" $ }}-app
+    version: {{ $version }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ include "sentiment-chart.fullname" $ }}-app
+      version: {{ $version }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "sentiment-chart.fullname" $ }}-app
+        version: {{ $version }}
+    spec:
+      containers:
+        - name: sentiment-app
+          image: {{ index $.Values.app.images $version }}
+          imagePullPolicy: Always
+          ports:
+            - containerPort: {{ $.Values.app.port }}
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 5001
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 5001
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          env:
+            - name: MODEL_SERVICE_URL
+              value: "http://{{ $.Values.model.modelurl }}:{{ $.Values.model.port }}"
+            - name: APP_MODE
+              valueFrom:
+                configMapKeyRef:
+                  name: dummy-config
+                  key: APP_MODE
+            - name: LOG_LEVEL
+              valueFrom:
+                configMapKeyRef:
+                  name: dummy-config
+                  key: LOG_LEVEL
+---
+{{- end }}
+{{- else }}
+# Fallback to single version if A/B testing is disabled
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -5,7 +61,7 @@ metadata:
   labels:
     app: {{ include "sentiment-chart.fullname" . }}-app
 spec:
-  replicas: 1  # Number of pod replicas
+  replicas: 1
   selector:
     matchLabels:
       app: {{ include "sentiment-chart.fullname" . }}-app
@@ -21,11 +77,11 @@ spec:
           ports:
             - containerPort: {{ .Values.app.port }}
           readinessProbe:
-          httpGet:
-            path: /
-            port: 5001
-          initialDelaySeconds: 5
-          periodSeconds: 5
+            httpGet:
+              path: /
+              port: 5001
+            initialDelaySeconds: 5
+            periodSeconds: 5
           livenessProbe:
             httpGet:
               path: /
@@ -45,3 +101,4 @@ spec:
                 configMapKeyRef:
                   name: dummy-config
                   key: LOG_LEVEL
+{{- end }}

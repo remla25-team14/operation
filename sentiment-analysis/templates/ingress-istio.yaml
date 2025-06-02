@@ -1,0 +1,108 @@
+{{- if and .Values.ingress.enabled (eq .Values.ingress.controller "istio") }}
+## 1) Istio Gateway: listens on port 80 for three hostnames
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: {{ include "sentiment-chart.fullname" . }}-gateway
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+    - port:
+        number: 80
+        name: http
+        protocol: HTTP
+      hosts:
+        - "{{ .Values.ingress.host }}"
+        - "prometheus.{{ .Values.ingress.host }}"
+        - "grafana.{{ .Values.ingress.host }}"
+
+---
+## 2) VirtualService for the app (“sentiment.local”)
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: {{ include "sentiment-chart.fullname" . }}-vs
+spec:
+  hosts:
+    - "{{ .Values.ingress.host }}"
+  gateways:
+    - {{ include "sentiment-chart.fullname" . }}-gateway
+  http:
+    {{- if .Values.traffic.abTesting.enabled }}
+    - match:
+        - headers:
+            {{ .Values.traffic.abTesting.matchHeader }}:
+              exact: {{ .Values.traffic.abTesting.experimentValue }}
+      route:
+        - destination:
+            host: {{ include "sentiment-chart.fullname" . }}-app-service
+            subset: v2
+    - route:
+        - destination:
+            host: {{ include "sentiment-chart.fullname" . }}-app-service
+            subset: v1
+    {{- else }}
+    - match:
+        - uri:
+            prefix: /metrics
+      route:
+        - destination:
+            host: {{ include "sentiment-chart.fullname" . }}-app-service
+            port:
+              number: {{ .Values.app.servicePort }}
+    - match:
+        - uri:
+            prefix: /
+      route:
+        - destination:
+            host: {{ include "sentiment-chart.fullname" . }}-app-service
+            port:
+              number: {{ .Values.app.servicePort }}
+    {{- end }}
+
+---
+## 3) VirtualService for “prometheus.sentiment.local”
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: {{ include "sentiment-chart.fullname" . }}-prometheus-vs
+spec:
+  hosts:
+    - "prometheus.{{ .Values.ingress.host }}"
+  gateways:
+    - {{ include "sentiment-chart.fullname" . }}-gateway
+  http:
+    - match:
+        - uri:
+            prefix: /
+      route:
+        - destination:
+            # If Prometheus was installed in the same namespace (e.g. default):
+            host: myprom-kube-prometheus-stack-prometheus.default.svc.cluster.local
+            port:
+              number: 9090
+
+---
+##
+## 4) VirtualService for “grafana.sentiment.local”
+##
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: {{ include "sentiment-chart.fullname" . }}-grafana-vs
+spec:
+  hosts:
+    - "grafana.{{ .Values.ingress.host }}"
+  gateways:
+    - {{ include "sentiment-chart.fullname" . }}-gateway
+  http:
+    - match:
+        - uri:
+            prefix: /
+      route:
+        - destination:
+            host: myprom-grafana.default.svc.cluster.local
+            port:
+              number: 80
+{{- end }}
