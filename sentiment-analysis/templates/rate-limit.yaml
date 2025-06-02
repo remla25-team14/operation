@@ -1,0 +1,46 @@
+{{- if and .Values.ingress.enabled (eq .Values.ingress.controller "istio") .Values.rateLimit.enabled }}
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: {{ include "sentiment-chart.fullname" . }}-rate-limit
+  namespace: istio-system
+spec:
+  workloadSelector:
+    labels:
+      istio: ingressgateway
+  configPatches:
+  - applyTo: HTTP_FILTER
+    match:
+      context: GATEWAY
+      listener:
+        filterChain:
+          filter:
+            name: "envoy.filters.network.http_connection_manager"
+    patch:
+      operation: INSERT_BEFORE
+      value:
+        name: envoy.filters.http.local_ratelimit
+        typed_config:
+          "@type": type.googleapis.com/udpa.type.v1.TypedStruct
+          type_url: type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
+          value:
+            stat_prefix: ip_rate_limiter
+            token_bucket:
+              max_tokens: {{ .Values.rateLimit.maxTokens }}
+              tokens_per_fill: {{ .Values.rateLimit.tokensPerFill }}
+              fill_interval: {{ .Values.rateLimit.fillInterval }}
+            filter_enabled:
+              default_value:
+                numerator: 100
+                denominator: HUNDRED
+            filter_enforced:
+              default_value:
+                numerator: 100
+                denominator: HUNDRED
+            response_headers_to_add:
+              - append: false
+                header:
+                  key: x-rate-limit-limit
+                  value: "{{ .Values.rateLimit.requestsPerMinute }}"
+            local_rate_limit_per_downstream_connection: false
+{{- end }}

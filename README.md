@@ -126,7 +126,16 @@ This project provisions a Kubernetes environment using **Vagrant** and **Ansible
    ```bash
    vagrant up
    
+3. **Run finalization**:
+   ```bash
+   cd ansible
+   ansible-playbook -u vagrant -i 192.168.56.100, finalization.yml
+   ```
 
+4. **Control kubectl from host**:
+   ```bash
+   export KUBECONFIG="$(pwd)/ansible/.kube/config"
+   kubectl get nodes
 
 
 

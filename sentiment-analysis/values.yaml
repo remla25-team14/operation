@@ -66,3 +66,12 @@ traffic:
     appVersions:
       - v1
       - v2
+
+rateLimit:
+  enabled: true
+  requestsPerMinute: 10
+  maxTokens: 10
+  tokensPerFill: 10
+  fillInterval: "60s"
+  blockDuration: "60s"
+
