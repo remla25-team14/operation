@@ -143,5 +143,7 @@ Approved PR: https://github.com/remla25-team14/model-training/pull/11#pullreques
 -- Reeve Lorena: --
 Created PR: https://github.com/remla25-team14/operation/pull/25 (Addresses A5)
 Merged PR: https://github.com/remla25-team14/operation/pull/29
+Approved PR: https://github.com/remla25-team14/operation/pull/31
+Merged PR: https://github.com/remla25-team14/operation/pull/31
 Approved PR: https://github.com/remla25-team14/operation/pull/29
 
