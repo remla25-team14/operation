@@ -114,6 +114,7 @@ Created PR: https://github.com/remla25-team14/app/pull/6
 Created PR: https://github.com/remla25-team14/lib-ml/pull/5
 Created PR: https://github.com/remla25-team14/lib-version/pull/2
 Created PR: https://github.com/remla25-team14/model-service/pull/5
-Merged: 
-Approved: 
+Created PR: https://github.com/remla25-team14/operation/pull/29
+Merged: https://github.com/remla25-team14/operation/pull/28#pullrequestreview-2889710303
+Approved: https://github.com/remla25-team14/operation/pull/28#pullrequestreview-2889710303
 
