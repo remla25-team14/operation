@@ -26,6 +26,10 @@ spec:
                   key: {{ .Values.githubTokenKey }}
             - name: ARTIFACT_ID
               value: "{{ .Values.model.artifactId }}"
+            - name: VECT_FILE_NAME_IN_ZIP
+              value: "{{ .Values.model.env.VECT_FILE_NAME_IN_ZIP }}"
+            - name: MODEL_FILE_NAME_IN_ZIP
+              value: "{{ .Values.model.env.MODEL_FILE_NAME_IN_ZIP }}"
           ports:
             - containerPort: {{ .Values.model.port }}
           {{- if .Values.sharedVolume.enabled }}
