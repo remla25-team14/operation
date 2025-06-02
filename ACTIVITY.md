@@ -108,3 +108,7 @@ Created PR: https://github.com/remla25-team14/model-training/pull/5 (Addresses A
 Merged PR: https://github.com/remla25-team14/model-training/pull/2
 Approved PR: https://github.com/remla25-team14/model-training/pull/2
 Merged PR: https://github.com/remla25-team14/operation/pull/13
+
+--Ciprian Bica: --
+Created PR: https://github.com/remla25-team14/operation/pull/26 (Addresses A5)
+Approved PR: https://github.com/remla25-team14/model-training/pull/11#pullrequestreview-2877526972
