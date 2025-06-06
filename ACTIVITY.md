@@ -147,3 +147,7 @@ Approved PR: https://github.com/remla25-team14/operation/pull/29
 
 -- Ilma Jaganjac: --
 Created PR: https://github.com/remla25-team14/operation/pull/29
+
+-- Ciprian Bica --
+Created PR: https://github.com/remla25-team14/operation/pull/32 (Addresses A3)
+Approved PR: https://github.com/remla25-team14/app/pull/7#pullrequestreview-2905783350
