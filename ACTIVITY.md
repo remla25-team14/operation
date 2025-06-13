@@ -155,3 +155,6 @@ Approved PR: https://github.com/remla25-team14/app/pull/7#pullrequestreview-2905
 -- Zeyu Fan --
 Created PR: https://github.com/remla25-team14/model-training/pull/12
 Approved PR: https://github.com/remla25-team14/operation/pull/32
+
+-- Shael Hakimi --
+Created PR: https://github.com/remla25-team14/operation/pull/31
