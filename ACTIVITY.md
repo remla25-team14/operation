@@ -159,3 +159,4 @@ Approved PR: https://github.com/remla25-team14/operation/pull/32
 -- Shael Hakimi --
 Created PR: https://github.com/remla25-team14/operation/pull/31
 Approved PR: https://github.com/remla25-team14/operation/pull/25
+Approved PR: https://github.com/remla25-team14/operation/pull/26
