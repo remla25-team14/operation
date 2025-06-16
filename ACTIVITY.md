@@ -136,7 +136,7 @@ Created PR: https://github.com/remla25-team14/model-training/pull/11
 Created PR: https://github.com/remla25-team14/operation/pull/26 (Addresses A5)
 Approved PR: https://github.com/remla25-team14/model-training/pull/11#pullrequestreview-2877526972
 
-# Week 7
+# W7
 
 -- Reeve Lorena: --
 Created PR: https://github.com/remla25-team14/operation/pull/25 (Addresses A5)
@@ -160,3 +160,9 @@ Approved PR: https://github.com/remla25-team14/operation/pull/32
 Created PR: https://github.com/remla25-team14/operation/pull/31
 Approved PR: https://github.com/remla25-team14/operation/pull/25
 Approved PR: https://github.com/remla25-team14/operation/pull/26
+
+# W8
+
+-- Zeyu Fan --
+Created PR: https://github.com/remla25-team14/operation/pull/33
+Approved PR: https://github.com/remla25-team14/app/pull/7
