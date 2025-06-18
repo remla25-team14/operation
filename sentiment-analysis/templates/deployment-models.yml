@@ -30,6 +30,8 @@ spec:
               value: "{{ .Values.model.env.VECT_FILE_NAME_IN_ZIP }}"
             - name: MODEL_FILE_NAME_IN_ZIP
               value: "{{ .Values.model.env.MODEL_FILE_NAME_IN_ZIP }}"
+            - name: PORT
+              value: "{{ .Values.model.port }}"
           ports:
             - containerPort: {{ .Values.model.port }}
           {{- if .Values.sharedVolume.enabled }}
