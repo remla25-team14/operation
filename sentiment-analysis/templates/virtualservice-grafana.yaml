@@ -1,0 +1,21 @@
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: {{ .Values.prefix }}-sentiment-chart-grafana-vs
+  labels:
+    app.kubernetes.io/name: {{ include "sentiment-chart.fullname" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+spec:
+  gateways:
+  - {{ .Values.prefix }}-sentiment-chart-gateway
+  hosts:
+  - grafana.{{ .Values.ingress.host }}
+  http:
+  - match:
+    - uri:
+        prefix: /
+    route:
+    - destination:
+        host: myprom-grafana.monitoring.svc.cluster.local
+        port:
+          number: 80

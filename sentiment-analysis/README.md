@@ -184,9 +184,35 @@ Linux (systemd-resolved):
   sudo systemd-resolve --flush-caches
 ```
 
-Install the Prometheus Stack if you have not already 
+### For the Vagrant cluster
 
-1. Install the Prometheus stack with the matching selector
+1. **Start the cluster**:
+   ```bash
+   vagrant up
+   cd ansible
+   ansible-playbook -u vagrant -i 192.168.56.100, finalization.yml
+   export KUBECONFIG="$(pwd)/ansible/.kube/config"
+   kubectl get nodes
+   ```
+
+2. **Get the cluster external IP**:
+   ```bash
+   # For Vagrant setup
+   CLUSTER_IP=192.168.56.100
+   
+   # Or get Istio LoadBalancer IP (after Istio is installed)
+   kubectl get svc istio-ingressgateway -n istio-system -o jsonpath='{.status.loadBalancer.ingress[0].ip}'
+   ```
+
+3. **Configure host resolution**:
+   ```bash
+   # Add to /etc/hosts (replace with your actual cluster IP)
+   sudo sh -c 'echo "192.168.56.100   sentiment.local grafana.sentiment.local prometheus.sentiment.local" >> /etc/hosts'
+   ```
+
+
+
+## 1. Install the Prometheus stack with the matching selector
 
 Install the kube-prometheus-stack under the monitoring namespace, giving it the label selector release=myprom:
 ```bash
@@ -240,15 +266,24 @@ Once the helm chart is deployed, you can access the grafana dashboard. Complete 
 
 1. First, get the Grafana admin password:
 ```bash
-kubectl get secret myprom-grafana -o jsonpath="{.data.admin-password}" | base64 --decode; echo
+kubectl get secret -n monitoring myprom-grafana -o jsonpath="{.data.admin-password}" | base64 --decode; echo
 ```
 
 2. Access Grafana:
-   - Open your browser and go to Access URL: http://grafana.{{ App service endpoint }}
+   - Open your browser and go to Access URL: http://grafana.sentiment.local/
    - Login with:
      * Username: `admin`
      * Password: (use the password obtained in step 1)
 
+3. Find the Dashboard
+  Go to **Dashboards** → **Browse**
+  Search for "Sentiment Analysis A/B Testing"
+  The dashboard should show 4 panels:
+   - **Positive Sentiment Ratio by Version** (gauge)
+   - **Model Response Time (95th percentile)** (timeseries)
+   - **Sentiment Predictions Rate by Version** (timeseries)
+   - **Application Info** (stat)
+   
 ## Sticky Session
 
 Sticky Sessions for A/B Testing
