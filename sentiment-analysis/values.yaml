@@ -2,7 +2,7 @@ fullnameOverride: ""
 prefix: sentiment
 
 model:
-  image: ghcr.io/remla25-team14/model-service:v0.1.2
+  image: ghcr.io/remla25-team14/model-service:v0.1.5
   port: 5000
   artifactId: "3219218428"
   modelurl: sentiment-sentiment-chart-model
@@ -77,7 +77,7 @@ traffic:
       - v2
 
 rateLimit:
-  enabled: true
+  enabled: false
   requestsPerMinute: 10
   maxTokens: 10
   tokensPerFill: 10
