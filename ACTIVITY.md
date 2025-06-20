@@ -174,6 +174,7 @@ Created PR: https://github.com/remla25-team14/app/pull/10
 Created PR: https://github.com/remla25-team14/operation/pull/38
 Approved PR: https://github.com/remla25-team14/operation/pull/34
 Approved PR: https://github.com/remla25-team14/operation/pull/36
+Approved PR: https://github.com/remla25-team14/model-training/pull/13
 
 # W10
 
