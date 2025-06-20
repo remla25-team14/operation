@@ -2,7 +2,7 @@ fullnameOverride: ""
 prefix: sentiment
 
 model:
-  image: ghcr.io/remla25-team14/model-service:v0.1.2
+  image: ghcr.io/remla25-team14/model-service:v0.1.5
   port: 5000
   artifactId: "3219218428"
   modelurl: sentiment-sentiment-chart-model
@@ -10,8 +10,8 @@ model:
     VECT_FILE_NAME_IN_ZIP: "c1_BoW_v1.pkl"
     MODEL_FILE_NAME_IN_ZIP: "c2_Classifier_v1.pkl"
   images:
-    v1: ghcr.io/remla25-team14/model-service:v0.1.2
-    v2: ghcr.io/remla25-team14/model-service:v0.1.2
+    v1: ghcr.io/remla25-team14/model-service:v0.1.5
+    v2: ghcr.io/remla25-team14/model-service:v0.1.5
 
 # app:
 #  image: ghcr.io/remla25-team14/app/app:sha-06d792c
@@ -77,7 +77,7 @@ traffic:
       - v2
 
 rateLimit:
-  enabled: true
+  enabled: false
   requestsPerMinute: 10
   maxTokens: 10
   tokensPerFill: 10

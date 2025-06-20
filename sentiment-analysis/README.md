@@ -214,13 +214,12 @@ Linux (systemd-resolved):
 
 ## 1. Install the Prometheus stack with the matching selector
 
-Install the kube-prometheus-stack under the monitoring namespace, giving it the label selector release=myprom:
+Install the kube-prometheus-stack, giving it the label selector release=myprom:
 ```bash
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 helm repo update
 
-helm install myprom prometheus-community/kube-prometheus-stack \
-  --namespace monitoring --create-namespace
+helm install myprom prometheus-community/kube-prometheus-stack
 ```
 ---
 
