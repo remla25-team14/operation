@@ -20,19 +20,12 @@
     # - name: reboot and wait for reboot to complete, disable in testing
     #   reboot:
     
-    # Deploy multiple SSH keys using a loop
-    - name: Add multiple SSH public keys to vagrant user
+    - name: Add SSH public key to vagrant user
       ansible.posix.authorized_key:
         user: vagrant
         state: present
-        key: "{{ lookup('file', '../ssh_keys/' + item) }}"
+        key: "{{ lookup('file', '../ssh_keys/your_ssh_key.pub') }}"
         manage_dir: yes
-      loop:
-        - your_ssh_key.pub
-        - admin_key.pub
-        - developer_key.pub
-        - monitoring_key.pub
-      ignore_errors: yes  # Continue if a key file doesn't exist
     
     - name: Permanently remove SWAP from /etc/fstab
       ansible.builtin.lineinfile:
@@ -111,7 +104,6 @@
         state: present
         update_cache: yes
 
-    # loop-based approach for kubernetes components
     - name: Install Kubelet
       apt:
         name: kubelet=1.32.4-1.1
