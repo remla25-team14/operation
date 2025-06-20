@@ -29,7 +29,7 @@
         manage_dir: yes
       loop:
         - your_ssh_key.pub
-        - admin_key.pub
+        - key-.pub
         - developer_key.pub
         - monitoring_key.pub
       ignore_errors: yes  # Continue if a key file doesn't exist
