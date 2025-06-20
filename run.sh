@@ -9,9 +9,9 @@ if ! command -v docker &> /dev/null; then
     exit 1
 fi
 
-# Check for docker-compose
-if ! command -v docker-compose &> /dev/null; then
-    echo "Error: docker-compose is not installed or not in PATH"
+# Check for docker compose (v2)
+if ! docker compose version &> /dev/null; then
+    echo "Error: docker compose (v2) is not available"
     exit 1
 fi
 
@@ -26,4 +26,4 @@ fi
 
 # Start the application
 echo "Launching services..."
-docker-compose up 
+docker compose up --build 

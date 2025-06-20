@@ -9,7 +9,7 @@ This repository serves as the orchestration layer for our machine learning appli
 This project consists of the following repositories:
 
 - [`lib-ml`](https://github.com/remla25-team14/lib-ml): Shared preprocessing logic used by both training and model-service.
-- [`model-training`](https://github.com/remla25-team14/model-training): Trains the sentiment classifier and uploads the model artifact.
+- [`model-training`](https://github.com/remla25-team14/model-training): Trains the sentiment classifier and publishes model releases.
 - [`model-service`](https://github.com/remla25-team14/model-service): Exposes a REST API to analyze restaurant reviews using the trained model.
 - [`lib-version`](https://github.com/remla25-team14/lib-version): Provides a shared utility to expose version information from a `VERSION` file, used by the app to return its version dynamically.
 - [`app`](https://github.com/remla25-team14/app): Web interface (React frontend + Flask backend) that interacts with the model service.
@@ -19,21 +19,33 @@ This project consists of the following repositories:
 
 ## Run the System
 
-### 1. Create `.env` file
+By default, the system is configured to use the `latest` version for both the `model-service` image and the trained model artifact. The application will automatically fetch the latest release from the `model-training` repository.
 
-Create a `.env` file in this directory with your GitHub token for model download:
+### Overriding Default Versions (Optional)
 
-```env
-GITHUB_TOKEN=ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+You can override the default versions by setting environment variables before running the system. This is useful for testing specific releases.
+
+**1. Override Trained Model Version:**
+
+To use a specific trained model, set the `TRAINED_MODEL_VERSION` variable. This version must match a release tag in the `model-training` repository.
+
+```bash
+export TRAINED_MODEL_VERSION=v0.1.3
 ```
 
-This token is required so that `model-service` can download the model artifact from GitHub Actions.
+**2. Override Model Service Image:**
 
-> Optional: Use the provided `run.sh` script to auto-load versioning and launch the system.
+To use a specific `model-service` Docker image, set the `MODEL_SERVICE_IMAGE_TAG` variable. This version must match an image tag on GHCR.
+
+```bash
+export MODEL_SERVICE_IMAGE_TAG=v0.1.6-rc.1
+```
+
+After launching the system with overrides, you can verify the versions being used by checking the labels in the web application UI.
 
 ---
 
-### 2. Start the System
+### Start the System
 
 ```bash
 ./run.sh
@@ -48,7 +60,7 @@ This will:
 
 ---
 
-### 3. Open in Browser
+### Open in Browser
 
 - App frontend: http://localhost:5001
 - Model service: http://localhost:5002/version
@@ -57,12 +69,26 @@ This will:
 
 ## ️Environment Variables
 
-| Variable         | Description                                   |
-|------------------|-----------------------------------------------|
-| `GITHUB_TOKEN`   | Required to download model artifact           |
-| `OWNER_REPO`     | Hardcoded: `remla25-team14/model-training`    |
-| `ARTIFACT_ID`    | Current: `3053668556`                         |
-| `APP_VERSION`    | Auto-loaded from `../app/VERSION`             |
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `MODEL_SERVICE_IMAGE_TAG` | Docker image tag for the `model-service` | `latest` |
+| `TRAINED_MODEL_VERSION` | GitHub release tag for model download | `latest` |
+| `APP_VERSION` | Auto-loaded from `../app/VERSION` | - |
+
+---
+
+## Model Release Workflow
+
+The system uses GitHub releases for model delivery:
+
+1. **Model Training**: Trains model and creates a GitHub release with model artifacts
+2. **Model Service**: Downloads model from the specified release tag
+3. **Caching**: Models are cached locally by version for faster startup
+
+To use a new model version:
+1. Train and release a new model in `model-training`
+2. Update `TRAINED_MODEL_VERSION` environment variable
+3. Restart the system
 
 ---
 
@@ -86,13 +112,13 @@ By integrating Prometheus with our application and Kubernetes `ServiceMonitor`, 
 ### Assignment 1 – Versioning, Releases and Containerization
 
 - All components are split into individual repositories
-- Model is trained and published as a GitHub Artifact
+- Model is trained and published as a GitHub Release
 - `lib-ml` is created and reused in both training and inference
-- `model-service` loads the model dynamically using `GITHUB_TOKEN`
+- `model-service` loads the model dynamically from GitHub releases
 - `app` integrates frontend, backend, versioning, and feedback flow
 - Dockerfiles and GitHub Actions are implemented for all components
 - This repository integrates everything with Docker Compose
-- System is tested end-to-end — emotion analysis is working
+- System is tested end-to-end — sentiment analysis is working
 
 ---
 
