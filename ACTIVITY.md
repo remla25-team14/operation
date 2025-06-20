@@ -173,7 +173,7 @@ Approved PR: https://github.com/remla25-team14/app/pull/7
 Created PR: https://github.com/remla25-team14/app/pull/10
 Created PR: https://github.com/remla25-team14/operation/pull/38
 Approved PR: https://github.com/remla25-team14/operation/pull/34
-Approved PR: https://github.com/remla25-team14/operation/pull/36#pullrequestreview-2944929405
+Approved PR: https://github.com/remla25-team14/operation/pull/36
 
 # W10
 
