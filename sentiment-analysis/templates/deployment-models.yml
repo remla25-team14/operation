@@ -1,3 +1,61 @@
+{{- if .Values.traffic.abTesting.enabled }}
+{{- range $version := .Values.traffic.abTesting.modelVersions }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "sentiment-chart.fullname" $ }}-model-{{ $version }}
+  labels:
+    app: {{ include "sentiment-chart.fullname" $ }}-model
+    version: {{ $version }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ include "sentiment-chart.fullname" $ }}-model
+      version: {{ $version }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "sentiment-chart.fullname" $ }}-model
+        version: {{ $version }}
+    spec:
+      containers:
+        - name: sentiment-model
+          image: {{ $.Values.model.image }}
+          imagePullPolicy: Never
+          env:
+            - name: GITHUB_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $.Values.githubTokenSecretName }}
+                  key: {{ $.Values.githubTokenKey }}
+            - name: TRAINED_MODEL_VERSION
+              value: "{{ index $.Values.model.versions $version }}"
+            - name: VECT_FILE_NAME
+              value: "{{ $.Values.model.env.VECT_FILE_NAME }}"
+            - name: MODEL_FILE_NAME
+              value: "{{ $.Values.model.env.MODEL_FILE_NAME }}"
+            - name: PORT
+              value: "{{ $.Values.model.port }}"
+            - name: MODEL_SERVICE_IMAGE_TAG
+              value: "{{ $.Values.model.image }}"
+          ports:
+            - containerPort: {{ $.Values.model.port }}
+          {{- if $.Values.sharedVolume.enabled }}
+          volumeMounts:
+            - name: shared-volume
+              mountPath: {{ $.Values.sharedVolume.path }}
+          {{- end }}
+      {{- if $.Values.sharedVolume.enabled }}
+      volumes:
+        - name: shared-volume
+          hostPath:
+            path: {{ $.Values.sharedVolume.hostPath }}
+      {{- end }}
+---
+{{- end }}
+{{- else }}
+# Fallback to single version if A/B testing is disabled
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -17,21 +75,23 @@ spec:
       containers:
         - name: sentiment-model
           image: {{ .Values.model.image }}
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Never
           env:
             - name: GITHUB_TOKEN
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.githubTokenSecretName }}
                   key: {{ .Values.githubTokenKey }}
-            - name: ARTIFACT_ID
-              value: "{{ .Values.model.artifactId }}"
-            - name: VECT_FILE_NAME_IN_ZIP
-              value: "{{ .Values.model.env.VECT_FILE_NAME_IN_ZIP }}"
-            - name: MODEL_FILE_NAME_IN_ZIP
-              value: "{{ .Values.model.env.MODEL_FILE_NAME_IN_ZIP }}"
+            - name: TRAINED_MODEL_VERSION
+              value: "{{ .Values.model.version }}"
+            - name: VECT_FILE_NAME
+              value: "{{ .Values.model.env.VECT_FILE_NAME }}"
+            - name: MODEL_FILE_NAME
+              value: "{{ .Values.model.env.MODEL_FILE_NAME }}"
             - name: PORT
               value: "{{ .Values.model.port }}"
+            - name: MODEL_SERVICE_IMAGE_TAG
+              value: "{{ .Values.model.image }}"
           ports:
             - containerPort: {{ .Values.model.port }}
           {{- if .Values.sharedVolume.enabled }}
@@ -45,3 +105,4 @@ spec:
           hostPath:
             path: {{ .Values.sharedVolume.hostPath }}
       {{- end }}
+{{- end }}

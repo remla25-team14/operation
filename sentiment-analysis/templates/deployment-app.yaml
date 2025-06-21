@@ -22,7 +22,7 @@ spec:
       containers:
         - name: sentiment-app
           image: {{ index $.Values.app.images $version }}
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: {{ $.Values.app.port }}
           readinessProbe:
@@ -73,7 +73,7 @@ spec:
       containers:
         - name: sentiment-app
           image: {{ .Values.app.image }}
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: {{ .Values.app.port }}
           readinessProbe:

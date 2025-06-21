@@ -2,16 +2,18 @@ fullnameOverride: ""
 prefix: sentiment
 
 model:
-  image: ghcr.io/remla25-team14/model-service:v0.1.5
+  # Use local images that will be built and loaded into Minikube
+  image: sentiment-model-service:latest
   port: 5000
-  artifactId: "3219218428"
+  version: "v0.1.5"
   modelurl: sentiment-sentiment-chart-model
   env:
-    VECT_FILE_NAME_IN_ZIP: "c1_BoW_v1.pkl"
-    MODEL_FILE_NAME_IN_ZIP: "c2_Classifier_v1.pkl"
-  images:
-    v1: ghcr.io/remla25-team14/model-service:v0.1.5
-    v2: ghcr.io/remla25-team14/model-service:v0.1.5
+    VECT_FILE_NAME: "c1_BoW_Sentiment_Model.pkl"
+    MODEL_FILE_NAME: "c2_Classifier_v1.pkl"
+  # Model versions for A/B testing - these are the TRAINED_MODEL_VERSION values
+  versions:
+    v1: "v0.1.5"
+    v2: "v0.1.4"
 
 # app:
 #  image: ghcr.io/remla25-team14/app/app:sha-06d792c
@@ -24,7 +26,7 @@ app:
   image: ghcr.io/remla25-team14/app/app:sha-06d792c
   images:
     v1: ghcr.io/remla25-team14/app/app:sha-06d792c
-    v2: ghcr.io/remla25-team14/app/app:v2-feedback-experiment
+    v2: ghcr.io/remla25-team14/app/app:v2-feedback-experiment-fixed
 
 githubTokenSecretName: github-token
 githubTokenKey: GITHUB_TOKEN
