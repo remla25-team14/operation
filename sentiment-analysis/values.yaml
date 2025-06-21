@@ -84,3 +84,14 @@ rateLimit:
   fillInterval: "60s"
   blockDuration: "60s"
 
+prometheus:
+  release: myprom
+
+# Alerting configuration
+alert:
+  threshold: 0.25
+  ratePerMin: 15
+  smtpFrom: your-team@gmail.com
+  smtpUser: your-team@gmail.com
+  smtpPass: REPLACEME     # use --set or Secret
+  receiverEmail: your-devs@example.com
