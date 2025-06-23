@@ -1,12 +1,8 @@
 services:
   # Frontend + Backend App
   app:
-    image: ${APP_IMAGE:-ghcr.io/remla25-team14/app:latest}
-    build:
-      context: ../app
-      dockerfile: Dockerfile
-      args:
-        APP_VERSION: ${APP_VERSION:-development}
+    image: ghcr.io/remla25-team14/app/app:1.0.0
+    pull_policy: always
     ports:
       - "5001:5001"
     environment:
@@ -20,9 +16,6 @@ services:
   model-service:
     image: ${MODEL_SERVICE_IMAGE:-ghcr.io/remla25-team14/model-service:latest}
     pull_policy: always
-    build:
-      context: ../model-service
-      dockerfile: Dockerfile
     expose:
       - "5000"
     environment:
