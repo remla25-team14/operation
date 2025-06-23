@@ -201,4 +201,8 @@ Created PR: https://github.com/remla25-team14/model-training/pull/14
 Approved PR: https://github.com/remla25-team14/operation/pull/38
 
 # W10
-
+-- Shael Hakimi: --
+Approved PR: https://github.com/remla25-team14/operation/pull/41
+Approved PR: https://github.com/remla25-team14/operation/pull/35
+Approved PR: https://github.com/remla25-team14/model-training/pull/14
+Created PR: https://github.com/remla25-team14/operation/pull/42
