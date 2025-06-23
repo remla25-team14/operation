@@ -79,7 +79,7 @@ spec:
       route:
         - destination:
             # If Prometheus was installed in the same namespace (e.g. default):
-            host: myprom-kube-prometheus-stack-prometheus.default.svc.cluster.local
+            host: myprom-kube-prometheus-sta-prometheus.default.svc.cluster.local
             port:
               number: 9090
 

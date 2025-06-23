@@ -39,16 +39,16 @@ spec:
             periodSeconds: 20
           env:
             - name: MODEL_SERVICE_URL
-              value: "http://{{ $.Values.model.modelurl }}:{{ $.Values.model.port }}"
+              value: "http://{{ include "sentiment-chart.fullname" $ }}-model:{{ $.Values.model.port }}"
             - name: APP_MODE
               valueFrom:
                 configMapKeyRef:
-                  name: dummy-config
+                  name: {{ include "sentiment-chart.fullname" $ }}-config
                   key: APP_MODE
             - name: LOG_LEVEL
               valueFrom:
                 configMapKeyRef:
-                  name: dummy-config
+                  name: {{ include "sentiment-chart.fullname" $ }}-config
                   key: LOG_LEVEL
 ---
 {{- end }}
@@ -90,15 +90,15 @@ spec:
             periodSeconds: 20
           env:
             - name: MODEL_SERVICE_URL
-              value: "http://{{ .Values.model.modelurl }}:{{ .Values.model.port }}"
+              value: "http://{{ include "sentiment-chart.fullname" . }}-model:{{ .Values.model.port }}"
             - name: APP_MODE
               valueFrom:
                 configMapKeyRef:
-                  name: dummy-config
+                  name: {{ include "sentiment-chart.fullname" . }}-config
                   key: APP_MODE
             - name: LOG_LEVEL
               valueFrom:
                 configMapKeyRef:
-                  name: dummy-config
+                  name: {{ include "sentiment-chart.fullname" . }}-config
                   key: LOG_LEVEL
 {{- end }}

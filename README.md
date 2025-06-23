@@ -34,10 +34,10 @@ The REMLA system consists of six interconnected repositories that work together 
 | [`app`](https://github.com/remla25-team14/app)                       | Web interface                              | React + Flask     |
 | [`operation`](https://github.com/remla25-team14/operation)           | **This repo** - Orchestration & deployment | Docker/Kubernetes |
 
+
 ---
 
 ## Prerequisites
-
 * Docker and Docker Compose
 * Git
 * GitHub Personal Access Token (for model artifact access)
@@ -54,6 +54,30 @@ The REMLA system consists of six interconnected repositories that work together 
 
 ### Assignment 1: Docker Deployment
 
+By default, the system is configured to use the `latest` version for both the `model-service` image and the trained model artifact. The application will automatically fetch the latest release from the `model-training` repository.
+
+### Overriding Default Versions (Optional)
+
+You can override the default versions by setting environment variables before running the system. This is useful for testing specific releases.
+
+**1. Override Trained Model Version:**
+
+To use a specific trained model, set the `TRAINED_MODEL_VERSION` variable. This version must match a release tag in the `model-training` repository.
+
+```bash
+export TRAINED_MODEL_VERSION=v0.1.3
+```
+
+**2. Override Model Service Image:**
+
+To use a specific `model-service` Docker image, set the `MODEL_SERVICE_IMAGE_TAG` variable. This version must match an image tag on GHCR.
+
+```bash
+export MODEL_SERVICE_IMAGE_TAG=v0.1.6-rc.1
+```
+
+After launching the system with overrides, you can verify the versions being used by checking the labels in the web application UI.
+
 #### 1. Environment Setup
 
 Create a `.env` file in the project root:
@@ -63,7 +87,6 @@ GITHUB_TOKEN=ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
 
 #### 2. Launch the Application
-
 ```bash
 ./run.sh
 ```
@@ -73,6 +96,7 @@ GITHUB_TOKEN=ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 * **Web Interface**: [http://localhost:5001](http://localhost:5001)
 * **Model Service API**: [http://localhost:5002/version](http://localhost:5002/version)
 * **Metrics Endpoint**: [http://localhost:5001/metrics](http://localhost:5001/metrics)
+
 
 #### Environment Variables
 
@@ -86,13 +110,11 @@ GITHUB_TOKEN=ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ### Assignment 2: Kubernetes with Vagrant
 
 1. **Prepare SSH access**:
-
    ```bash
    mkdir -p ssh_keys
    cp ~/.ssh/id_rsa.pub ssh_keys/your_ssh_key.pub
    ```
 2. **Provision the cluster**:
-
    ```bash
    vagrant up
    ```
@@ -124,11 +146,9 @@ This assignment involves deploying the application to a Kubernetes cluster and c
 
 2. **Edit `/etc/hosts`**:
    Add the following line:
-
    ```bash
    127.0.0.1 sentiment.local grafana.sentiment.local prometheus.sentiment.local
    ```
-
 3. **Create GitHub Token Secret**:
 
    ```bash
