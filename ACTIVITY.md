@@ -122,7 +122,7 @@ Merged: https://github.com/remla25-team14/operation/pull/28#pullrequestreview-28
 Approved: https://github.com/remla25-team14/operation/pull/28#pullrequestreview-2889710303
 
 -- Zeyu Fan --
-Created PR: https://github.com/remla25-team14/operation/pull/28
+Created PR: https://github.com/remla25-team14/operation/pull/28 (Adresses A5 Extension Proposal)
 Approved PR: https://github.com/remla25-team14/operation/pull/29
 
 -- Shael Hakimi: --
@@ -194,6 +194,10 @@ Created PR: https://github.com/remla25-team14/operation/pull/37
 Created PR: https://github.com/remla25-team14/operation/pull/36
 Created PR: https://github.com/remla25-team14/operation/pull/34
 Approved PR: https://github.com/remla25-team14/operation/pull/32
+
+-- Zeyu Fan: --
+Created PR: https://github.com/remla25-team14/model-training/pull/14
+Approved PR: https://github.com/remla25-team14/operation/pull/38
 
 # W10
 
