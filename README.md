@@ -221,7 +221,7 @@ This assignment sets up advanced traffic routing (A/B testing) and rate limiting
    curl -L https://istio.io/downloadIstio | sh -
    cd istio-*/
    export PATH="$PWD/bin:$PATH"
-   istioctl install --set profile=demo -y
+   istioctl install
    kubectl label namespace default istio-injection=enabled
    ```
 
