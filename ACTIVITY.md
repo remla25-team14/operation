@@ -187,6 +187,7 @@ Approved PR: https://github.com/remla25-team14/model-service/pull/7
 
 -- Ciprian Bica --
 Approved PR: https://github.com/remla25-team14/operation/pull/34#pullrequestreview-2944203728
+Created PR: https://github.com/remla25-team14/operation/pull/41
 
 -- Reeve Lorena: --
 Created PR: https://github.com/remla25-team14/operation/pull/35
