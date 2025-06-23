@@ -179,11 +179,21 @@ Approved PR: https://github.com/remla25-team14/model-training/pull/13
 -- Shael Hakimi: --
 Created PR: https://github.com/remla25-team14/model-training/pull/13
 Created PR: https://github.com/remla25-team14/model-service/pull/9
+Created PR: https://github.com/remla25-team14/operation/pull/40
+Created PR: https://github.com/remla25-team14/model-service/pull/10
+Created PR: https://github.com/remla25-team14/app/pull/11
 Approved PR: https://github.com/remla25-team14/operation/pull/39
 Approved PR: https://github.com/remla25-team14/model-service/pull/7
 
 -- Ciprian Bica --
 Approved PR: https://github.com/remla25-team14/operation/pull/34#pullrequestreview-2944203728
+
+-- Reeve Lorena: --
+Created PR: https://github.com/remla25-team14/operation/pull/35
+Created PR: https://github.com/remla25-team14/operation/pull/37
+Created PR: https://github.com/remla25-team14/operation/pull/36
+Created PR: https://github.com/remla25-team14/operation/pull/34
+Approved PR: https://github.com/remla25-team14/operation/pull/32
 
 # W10
 
