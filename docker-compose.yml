@@ -19,20 +19,22 @@ services:
   # Model Service
   model-service:
     image: ${MODEL_SERVICE_IMAGE:-ghcr.io/remla25-team14/model-service:latest}
+    pull_policy: always
     build:
       context: ../model-service
       dockerfile: Dockerfile
     expose:
       - "5000"
     environment:
-      - OWNER_REPO=${OWNER_REPO:-remla25-team14/model-training}
-      - ARTIFACT_ID=${ARTIFACT_ID:-3053668556}
-      - PORT=5000
-    secrets:
-      - github_token
+      - MODEL_SERVICE_IMAGE_TAG=${MODEL_SERVICE_IMAGE_TAG:-latest}
+      - GITHUB_TOKEN_FILE=/run/secrets/github_token
+      - TRAINED_MODEL_VERSION=${TRAINED_MODEL_VERSION:-latest}
+      - MODEL_CACHE_DIR=/app/model_cache
     volumes:
       - model-cache:/app/model_cache
     restart: unless-stopped
+    secrets:
+      - github_token
 
 volumes:
   model-cache:  
