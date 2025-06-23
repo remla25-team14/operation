@@ -161,7 +161,10 @@ This project provisions a Kubernetes environment using **Vagrant** and **Ansible
 4. **Control kubectl from host**:
    ```bash
    export KUBECONFIG="$(pwd)/ansible/.kube/config"
+   ```
+   To check if this worked, you can run the following command on your host machine:
+   ```bash
    kubectl get nodes
-
+   ```
 
 
