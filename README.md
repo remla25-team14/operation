@@ -70,10 +70,10 @@ export TRAINED_MODEL_VERSION=v0.1.3
 
 **2. Override Model Service Image:**
 
-To use a specific `model-service` Docker image, set the `MODEL_SERVICE_IMAGE_TAG` variable. This version must match an image tag on GHCR.
+To use a specific `model-service` Docker image, set the `MODEL_SERVICE_IMAGE` variable. This version must match an image tag on GHCR, like `v0.1.6`.
 
 ```bash
-export MODEL_SERVICE_IMAGE_TAG=v0.1.6-rc.1
+export MODEL_SERVICE_IMAGE=ghcr.io/remla25-team14/model-service:v0.1.6
 ```
 
 After launching the system with overrides, you can verify the versions being used by checking the labels in the web application UI.
@@ -103,9 +103,8 @@ GITHUB_TOKEN=ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 | Variable       | Description                      | Default/Example                   |
 | -------------- | -------------------------------- | --------------------------------- |
 | `GITHUB_TOKEN` | GitHub token for artifact access | Required                          |
-| `OWNER_REPO`   | Model training repository        | `remla25-team14/model-training`   |
-| `ARTIFACT_ID`  | Current model artifact ID        | `3053668556`                      |
-| `APP_VERSION`  | Application version              | Auto-loaded from `../app/VERSION` |
+| `MODEL_SERVICE_IMAGE` | Model service Docker image | `ghcr.io/remla25-team14/model-service:latest` |
+| `TRAINED_MODEL_VERSION` | Model artifact version | `latest` |
 
 ### Assignment 2: Kubernetes with Vagrant
 
@@ -145,9 +144,11 @@ This assignment involves deploying the application to a Kubernetes cluster and c
    ```
 
 2. **Edit `/etc/hosts`**:
-   Add the following line:
+   Add the following entries (use the ingress IP address shown by `kubectl get ingress`):
    ```bash
-   127.0.0.1 sentiment.local grafana.sentiment.local prometheus.sentiment.local
+   192.168.49.2 sentiment.local
+   192.168.49.2 grafana.sentiment.local
+   192.168.49.2 prometheus.sentiment.local
    ```
 3. **Create GitHub Token Secret**:
 
@@ -176,27 +177,34 @@ This assignment involves deploying the application to a Kubernetes cluster and c
      --set traffic.abTesting.enabled=false
    ```
 
-6. **Verify Installation**:
+#### Overriding Model Service Version (Kubernetes/Helm)
 
+You can override both the model service image and trained model version for Kubernetes deployments. Both overrides must be set together to ensure consistency:
+
+```bash
+helm install mysentiment ./sentiment-analysis \
+  --set modelServiceOverride.enabled=true \
+  --set modelServiceOverride.image=ghcr.io/remla25-team14/model-service:v0.1.6 \
+  --set modelServiceOverride.imageTag=v0.1.6 \
+  --set modelServiceOverride.trainedModelVersion=v0.1.3 \
+  --set prefix=mysentiment \
+  --set ingress.enabled=true \
+  --set ingress.controller=nginx \
+  --set ingress.className=nginx \
+  --set ingress.host=sentiment.local
+```
+
+Note: Always set both `modelServiceOverride.image` and `modelServiceOverride.imageTag` to ensure the container image and environment variables are consistent.
+
+After deployment, you can verify the versions:
+1. Check the pod's image and environment variables:
    ```bash
-   kubectl get pods
-   kubectl get svc
-   kubectl get ingress
+   kubectl describe pod <model-pod-name>
    ```
-
-7. **Access the Services**:
-
-   * Application: [http://sentiment.local](http://sentiment.local)
-   * Grafana: [http://grafana.sentiment.local](http://grafana.sentiment.local)
-
-8. **Grafana Credentials**:
-
+2. Access the model service's version endpoint:
    ```bash
-   kubectl get secret myprom-grafana -o jsonpath="{.data.admin-password}" | base64 --decode; echo
+   curl http://sentiment.local/version
    ```
-
-   * Username: `admin`
-   * Password: output from above
 
 ### Assignment 4: ML Configuration Management & ML Testing
 

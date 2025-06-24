@@ -1,14 +1,30 @@
 fullnameOverride: ""
 prefix: sentiment
 
+# Model Service Image Override Configuration
+# These settings allow overriding the model service image and model version
+# similar to the Docker Compose setup
+modelServiceOverride:
+  enabled: false  # Set to true to enable version overrides
+  # When enabled, the following values can be set via --set or --set-string:
+  # modelServiceOverride.image: Full image name (e.g., ghcr.io/remla25-team14/model-service:v0.1.6)
+  # modelServiceOverride.imageTag: Image tag only (e.g., v0.1.6)
+  # modelServiceOverride.trainedModelVersion: Model artifact version (e.g., v0.1.3)
+  image: ""  # Override image (full name including tag)
+  imageTag: "latest"  # Override image tag only
+  trainedModelVersion: "latest"  # Override trained model version
+
 model:
   image: ghcr.io/remla25-team14/model-service:v1.1.0
   port: 5000
-  artifactId: "3219218428"
+  # Default model configuration (used when override is disabled)
+  trainedModelVersion: "latest"  # Default GitHub release version to use
+  imageTag: "v1.1.0"  # Default image tag
   modelurl: sentiment-sentiment-chart-model
   env:
-    VECT_FILE_NAME_IN_ZIP: "c1_BoW_v1.pkl"
-    MODEL_FILE_NAME_IN_ZIP: "c2_Classifier_v1.pkl"
+    # Correct environment variable names (as used by the model service)
+    VECT_FILE_NAME: "c1_BoW_Sentiment_Model.pkl"
+    MODEL_FILE_NAME: "c2_Classifier_v1.pkl"
   images:
     v1: ghcr.io/remla25-team14/model-service:v1.1.0
     v2: ghcr.io/remla25-team14/model-service:v1.1.0

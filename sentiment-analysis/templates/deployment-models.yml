@@ -16,7 +16,12 @@ spec:
     spec:
       containers:
         - name: sentiment-model
+          {{- if .Values.modelServiceOverride.enabled }}
+          # Use override image if enabled
+          image: {{ .Values.modelServiceOverride.image | default .Values.model.image }}
+          {{- else }}
           image: {{ .Values.model.image }}
+          {{- end }}
           imagePullPolicy: IfNotPresent
           env:
             - name: GITHUB_TOKEN
@@ -24,12 +29,25 @@ spec:
                 secretKeyRef:
                   name: {{ .Values.githubTokenSecretName }}
                   key: {{ .Values.githubTokenKey }}
-            - name: ARTIFACT_ID
-              value: "{{ .Values.model.artifactId }}"
-            - name: VECT_FILE_NAME_IN_ZIP
-              value: "{{ .Values.model.env.VECT_FILE_NAME_IN_ZIP }}"
-            - name: MODEL_FILE_NAME_IN_ZIP
-              value: "{{ .Values.model.env.MODEL_FILE_NAME_IN_ZIP }}"
+            {{- if .Values.modelServiceOverride.enabled }}
+            # Use override values when enabled
+            - name: TRAINED_MODEL_VERSION
+              value: "{{ .Values.modelServiceOverride.trainedModelVersion }}"
+            - name: MODEL_SERVICE_IMAGE_TAG
+              value: "{{ .Values.modelServiceOverride.imageTag }}"
+            {{- else }}
+            # Use default values from releases
+            - name: TRAINED_MODEL_VERSION
+              value: "{{ .Values.model.trainedModelVersion | default "latest" }}"
+            - name: MODEL_SERVICE_IMAGE_TAG
+              value: "{{ .Values.model.imageTag | default "latest" }}"
+            {{- end }}
+            - name: VECT_FILE_NAME
+              value: "{{ .Values.model.env.VECT_FILE_NAME | default "c1_BoW_Sentiment_Model.pkl" }}"
+            - name: MODEL_FILE_NAME
+              value: "{{ .Values.model.env.MODEL_FILE_NAME | default "c2_Classifier_v1.pkl" }}"
+            - name: MODEL_CACHE_DIR
+              value: "/app/model_cache"
             - name: PORT
               value: "{{ .Values.model.port }}"
           ports:
