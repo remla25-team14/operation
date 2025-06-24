@@ -56,7 +56,7 @@ The REMLA system consists of six interconnected repositories that work together 
 
 By default, the system is configured to use the `latest` version for both the `model-service` image and the trained model artifact. The application will automatically fetch the latest release from the `model-training` repository.
 
-### Overriding Default Versions (Optional)
+#### Overriding Default Versions (Optional)
 
 You can override the default versions by setting environment variables before running the system. This is useful for testing specific releases.
 
@@ -80,9 +80,12 @@ After launching the system with overrides, you can verify the versions being use
 
 #### 1. Environment Setup
 
-Create a `.env` file in the project root:
+Create a folder inside of `operations` named `secrets`, with a text file where you put your PAT:
 
-```env
+```bash
+cd /operations
+mkdir -p secrets
+touch github_token.txt
 GITHUB_TOKEN=ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
 
