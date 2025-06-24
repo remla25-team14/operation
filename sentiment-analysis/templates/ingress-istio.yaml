@@ -31,17 +31,17 @@ spec:
   http:
     {{- if .Values.traffic.abTesting.enabled }}
     - match:
-        - headers:
-            {{ .Values.traffic.abTesting.matchHeader }}:
-              exact: {{ .Values.traffic.abTesting.experimentValue }}
+      - uri:
+          prefix: /
       route:
-        - destination:
-            host: {{ include "sentiment-chart.fullname" . }}-app-service
-            subset: v2
-    - route:
-        - destination:
-            host: {{ include "sentiment-chart.fullname" . }}-app-service
-            subset: v1
+      - destination:
+          host: {{ include "sentiment-chart.fullname" . }}-app-service
+          subset: v1
+        weight: 90
+      - destination:
+          host: {{ include "sentiment-chart.fullname" . }}-app-service
+          subset: v2
+        weight: 10
     {{- else }}
     - match:
         - uri:
