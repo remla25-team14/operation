@@ -167,6 +167,10 @@ Approved PR: https://github.com/remla25-team14/operation/pull/26
 Created PR: https://github.com/remla25-team14/operation/pull/33
 Approved PR: https://github.com/remla25-team14/app/pull/7
 
+-- Reeve Lorena --
+Created PR: https://github.com/remla25-team14/app/pull/8
+Merged PR: https://github.com/remla25-team14/app/pull/8
+
 # W9
 
 -- Ilma Jaganjac: --
@@ -209,3 +213,12 @@ Created PR: https://github.com/remla25-team14/operation/pull/42
 
 -- Ilma Jaganjac --
 Created PR: https://github.com/remla25-team14/operation/pull/44
+
+-- Reeve Lorena: --
+Created PR: https://github.com/remla25-team14/app/pull/12
+Created PR: https://github.com/remla25-team14/operation/pull/43
+Merged PR: https://github.com/remla25-team14/app/pull/12
+Merged PR: https://github.com/remla25-team14/operation/pull/43
+Approved PR: https://github.com/remla25-team14/operation/pull/40
+Approved PR: https://github.com/remla25-team14/operation/pull/42
+Approved PR: https://github.com/remla25-team14/operation/pull/44
