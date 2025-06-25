@@ -1,23 +1,58 @@
-# Operation Repository — REMLA Assignment 1
+# REMLA Operations Repository
 
-This repository serves as the orchestration layer for our machine learning application, enabling seamless deployment of all components (frontend, backend, and model service) via Docker Compose.
+This repository serves as the orchestration layer for our machine learning application, providing seamless deployment and management of all system components including frontend, backend, and model services.
+
+## Table of Contents
+
+* [Architecture Overview](#architecture-overview)
+* [Prerequisites](#prerequisites)
+* [Quick Start](#quick-start)
+
+  * [Assignment 1: Docker Deployment](#assignment-1-docker-deployment)
+  * [Assignment 2: Kubernetes with Vagrant](#assignment-2-kubernetes-with-vagrant)
+  * [Assignment 3: Operate and Monitor Kubernetes](#assignment-3-operate-and-monitor-kubernetes)
+  * [Assignment 4: ML Configuration Management & ML Testing](#assignment-4-ml-configuration-management--ml-testing)
+  * [Assignment 5: Istio Service Mesh](#assignment-5-istio-service-mesh)
+* [Monitoring](#monitoring)
+* [Contributors](#contributors)
+* [Support](#support)
 
 ---
 
-## Included Repositories
+## Architecture Overview
 
-This project consists of the following repositories:
+The REMLA system consists of six interconnected repositories that work together to provide a complete ML-powered sentiment analysis application:
 
-- [`lib-ml`](https://github.com/remla25-team14/lib-ml): Shared preprocessing logic used by both training and model-service.
-- [`model-training`](https://github.com/remla25-team14/model-training): Trains the sentiment classifier and publishes model releases.
-- [`model-service`](https://github.com/remla25-team14/model-service): Exposes a REST API to analyze restaurant reviews using the trained model.
-- [`lib-version`](https://github.com/remla25-team14/lib-version): Provides a shared utility to expose version information from a `VERSION` file, used by the app to return its version dynamically.
-- [`app`](https://github.com/remla25-team14/app): Web interface (React frontend + Flask backend) that interacts with the model service.
-- [`operation`](https://github.com/remla25-team14/operation): This repo; integrates and launches all components.
+### Core Components
+
+| Repository                                                           | Purpose                                    | Technology        |
+| -------------------------------------------------------------------- | ------------------------------------------ | ----------------- |
+| [`lib-ml`](https://github.com/remla25-team14/lib-ml)                 | Shared preprocessing logic                 | Python            |
+| [`model-training`](https://github.com/remla25-team14/model-training) | Model training pipeline                    | Python/MLOps      |
+| [`model-service`](https://github.com/remla25-team14/model-service)   | REST API for model inference               | Python/Flask      |
+| [`lib-version`](https://github.com/remla25-team14/lib-version)       | Version management utility                 | Python            |
+| [`app`](https://github.com/remla25-team14/app)                       | Web interface                              | React + Flask     |
+| [`operation`](https://github.com/remla25-team14/operation)           | **This repo** - Orchestration & deployment | Docker/Kubernetes |
+
 
 ---
 
-## Run the System
+## Prerequisites
+* Docker and Docker Compose
+* Git
+* GitHub Personal Access Token (for model artifact access)
+
+### For Kubernetes Deployment
+
+* Vagrant (latest version)
+* VirtualBox or compatible provider
+* Ansible
+
+---
+
+## Quick Start
+
+### Assignment 1: Docker Deployment
 
 By default, the system is configured to use the `latest` version for both the `model-service` image and the trained model artifact. The application will automatically fetch the latest release from the `model-training` repository.
 
@@ -43,122 +78,164 @@ export MODEL_SERVICE_IMAGE_TAG=v0.1.6-rc.1
 
 After launching the system with overrides, you can verify the versions being used by checking the labels in the web application UI.
 
----
+#### 1. Environment Setup
 
-### Start the System
+Create a `.env` file in the project root:
 
+```env
+GITHUB_TOKEN=ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+```
+
+#### 2. Launch the Application
 ```bash
 ./run.sh
 ```
 
-This will:
-- Load the app version from `../app/VERSION`
-- Build and launch:
-  - the React+Flask app (on port `5001`)
-  - the model-service (on port `5002`)
-- Bind all internal APIs together using Docker networking
+#### 3. Access the Application
 
----
-
-### Open in Browser
-
-- App frontend: http://localhost:5001
-- Model service: http://localhost:5002/version
-
----
-
-## ️Environment Variables
-
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `MODEL_SERVICE_IMAGE_TAG` | Docker image tag for the `model-service` | `latest` |
-| `TRAINED_MODEL_VERSION` | GitHub release tag for model download | `latest` |
-| `APP_VERSION` | Auto-loaded from `../app/VERSION` | - |
-
----
-
-## Model Release Workflow
-
-The system uses GitHub releases for model delivery:
-
-1. **Model Training**: Trains model and creates a GitHub release with model artifacts
-2. **Model Service**: Downloads model from the specified release tag
-3. **Caching**: Models are cached locally by version for faster startup
-
-To use a new model version:
-1. Train and release a new model in `model-training`
-2. Update `TRAINED_MODEL_VERSION` environment variable
-3. Restart the system
-
----
-
-## Monitoring and Observability
-
-We have instrumented the backend service with Prometheus to expose and collect metrics for improved observability. These metrics include:
-
-- **Application Info (`app_info`)**: Captures the application version as a gauge metric.
-- **Sentiment Ratio (`sentiment_ratio`)**: A gauge tracking the ratio of positive reviews to total reviews.
-- **Sentiment Predictions (`sentiment_predictions_total`)**: A counter labeled by `sentiment` (`positive` or `negative`) counting each prediction.
-- **Model Response Time (`model_response_time_seconds`)**: A histogram measuring the response time from the model service.
-
-The backend exposes these metrics at the `/metrics` endpoint. In Kubernetes, the `ServiceMonitor` defined in `app/kubernetes/monitoring.yml` scrapes the `sentiment-app-service` (port `http`) every second at the `/metrics` path.
-
-By integrating Prometheus with our application and Kubernetes `ServiceMonitor`, we enable real-time monitoring, alerting, and dashboarding of key performance and usage metrics.
-
----
-
-## Progress Log
-
-### Assignment 1 – Versioning, Releases and Containerization
-
-- All components are split into individual repositories
-- Model is trained and published as a GitHub Release
-- `lib-ml` is created and reused in both training and inference
-- `model-service` loads the model dynamically from GitHub releases
-- `app` integrates frontend, backend, versioning, and feedback flow
-- Dockerfiles and GitHub Actions are implemented for all components
-- This repository integrates everything with Docker Compose
-- System is tested end-to-end — sentiment analysis is working
-
----
-
-## Contributors
-
-See `ACTIVITY.md` for individual contributions and PR links.
+* **Web Interface**: [http://localhost:5001](http://localhost:5001)
+* **Model Service API**: [http://localhost:5002/version](http://localhost:5002/version)
+* **Metrics Endpoint**: [http://localhost:5001/metrics](http://localhost:5001/metrics)
 
 
+#### Environment Variables
 
-# Kubernetes Vagrant Setup - REMLA Assignment 2
+| Variable       | Description                      | Default/Example                   |
+| -------------- | -------------------------------- | --------------------------------- |
+| `GITHUB_TOKEN` | GitHub token for artifact access | Required                          |
+| `OWNER_REPO`   | Model training repository        | `remla25-team14/model-training`   |
+| `ARTIFACT_ID`  | Current model artifact ID        | `3053668556`                      |
+| `APP_VERSION`  | Application version              | Auto-loaded from `../app/VERSION` |
 
-This project provisions a Kubernetes environment using **Vagrant** and **Ansible**.
+### Assignment 2: Kubernetes with Vagrant
 
----
-
-## Prerequisites
-
-- Vagrant (latest version)
-- VirtualBox or another Vagrant-supported provider
-- Ansible
-
-## Quick Start
-
-1. **Add your SSH key**:
+1. **Prepare SSH access**:
    ```bash
    mkdir -p ssh_keys
    cp ~/.ssh/id_rsa.pub ssh_keys/your_ssh_key.pub
-
----
-2. **Start the cluster**:
+   ```
+2. **Provision the cluster**:
    ```bash
    vagrant up
-   
-3. **Run finalization**:
+   ```
+3. **Complete cluster setup**:
+
    ```bash
    cd ansible
    ansible-playbook -u vagrant -i 192.168.56.100, finalization.yml
    ```
+4. **Configure local kubectl**:
 
-4. **Control kubectl from host**:
+   ```bash
+   export KUBECONFIG="$(pwd)/ansible/.kube/config"
+   kubectl get nodes
+   ```
+
+### Assignment 3: Operate and Monitor Kubernetes
+
+This assignment involves deploying the application to a Kubernetes cluster and configuring monitoring with Prometheus and Grafana.
+
+#### Steps:
+
+1. **Start Minikube**:
+
+   ```bash
+   minikube start
+   minikube addons enable ingress
+   ```
+
+2. **Edit `/etc/hosts`**:
+   Add the following line:
+   ```bash
+   127.0.0.1 sentiment.local grafana.sentiment.local prometheus.sentiment.local
+   ```
+3. **Create GitHub Token Secret**:
+
+   ```bash
+   kubectl create secret generic github-token --from-literal=GITHUB_TOKEN=<your_github_token>
+   ```
+
+4. **Install Prometheus Monitoring Stack**:
+
+   ```bash
+   helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+   helm repo update
+   helm install myprom prometheus-community/kube-prometheus-stack
+   ```
+
+5. **Install Helm Chart**:
+
+   ```bash
+   helm install mysentiment ./sentiment-analysis \
+     --set prefix=mysentiment \
+     --set ingress.enabled=true \
+     --set ingress.controller=nginx \
+     --set ingress.className=nginx \
+     --set ingress.host=sentiment.local \
+     --set rateLimit.enabled=false \
+     --set traffic.abTesting.enabled=false
+   ```
+
+6. **Verify Installation**:
+
+   ```bash
+   kubectl get pods
+   kubectl get svc
+   kubectl get ingress
+   ```
+
+7. **Access the Services**:
+
+   * Application: [http://sentiment.local](http://sentiment.local)
+   * Grafana: [http://grafana.sentiment.local](http://grafana.sentiment.local)
+
+8. **Grafana Credentials**:
+
+   ```bash
+   kubectl get secret myprom-grafana -o jsonpath="{.data.admin-password}" | base64 --decode; echo
+   ```
+
+   * Username: `admin`
+   * Password: output from above
+
+### Assignment 4: ML Configuration Management & ML Testing
+
+Documentation coming soon / maintained in separate repo(s).
+
+### Assignment 5: Istio Service Mesh
+
+This assignment sets up advanced traffic routing (A/B testing) and rate limiting using Istio.
+
+#### Steps:
+
+1. **Start Minikube**:
+
+   ```bash
+   minikube start --cpus=4 --memory=8g
+   minikube addons enable ingress
+   ```
+
+2. **Install Istio**:
+
+   ```bash
+   curl -L https://istio.io/downloadIstio | sh -
+   cd istio-*/
+   export PATH="$PWD/bin:$PATH"
+   istioctl install
+   kubectl label namespace default istio-injection=enabled
+   ```
+
+3. **Edit `/etc/hosts`**:
+
+   ```bash
+   127.0.0.1 sentiment.local grafana.sentiment.local prometheus.sentiment.local
+   ```
+
+4. **Install Prometheus Stack**:
+   (Same as in Assignment 3)
+
+5. **Create GitHub Token Secret**:
+
    ```bash
    export KUBECONFIG="$(pwd)/ansible/.kube/config"
    ```
@@ -167,4 +244,80 @@ This project provisions a Kubernetes environment using **Vagrant** and **Ansible
    kubectl get nodes
    ```
 
+   kubectl create secret generic github-token --from-literal=GITHUB_TOKEN=<your github PAT token>
+   ```
 
+6. **Install Helm Chart with Istio Options**:
+
+   ```bash
+   helm install mysentiment ./sentiment-analysis \
+     --set prefix=mysentiment \
+     --set ingress.controller=istio \
+     --set traffic.abTesting.enabled=true \
+     --set rateLimit.enabled=true
+   ```
+
+7. **Check Istio Resources**:
+
+   ```bash
+   kubectl get virtualservice mysentiment-app -o yaml
+   kubectl get destinationrule mysentiment-app -o yaml
+   ```
+
+8. **Simulate A/B Testing**:
+
+   ```bash
+   curl -H "x-user-experiment: A" http://sentiment.local/
+   curl -H "x-user-experiment: B" http://sentiment.local/
+   ```
+
+9. **Access Grafana Dashboard**:
+
+   ```bash
+   kubectl get secret myprom-grafana -o jsonpath="{.data.admin-password}" | base64 --decode; echo
+   ```
+
+   Navigate to [http://grafana.sentiment.local](http://grafana.sentiment.local)
+
+   * Username: `admin`
+   * Password: retrieved value
+
+---
+
+## Monitoring
+
+The application includes comprehensive observability features powered by Prometheus:
+
+### Available Metrics
+
+* `app_info`: Application version info (gauge)
+* `sentiment_ratio`: Ratio of positive to total reviews (gauge)
+* `sentiment_predictions_total`: Count of predictions by sentiment type (counter)
+* `model_response_time_seconds`: Model latency (histogram)
+
+### Setup
+
+* Metrics are exposed at `/metrics`
+* Uses `ServiceMonitor` for Prometheus scraping (1s interval)
+* Grafana dashboards can visualize metrics
+
+---
+
+## Contributors
+
+See [`ACTIVITY.md`](./ACTIVITY.md) for detailed contribution history and pull request links.
+
+---
+
+## Support
+
+If you encounter issues or have questions:
+
+
+1. Check individual repo documentation
+2. Visit `/metrics` for health info
+3. Use `docker-compose logs [service-name]`
+4. For Kubernetes:
+
+   * `kubectl describe pods`
+   * `kubectl logs [pod-name]`

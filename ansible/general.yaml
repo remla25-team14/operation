@@ -26,6 +26,12 @@
         state: present
         key: "{{ lookup('file', '../ssh_keys/your_ssh_key.pub') }}"
         manage_dir: yes
+      loop:
+        - your_ssh_key.pub
+        - your_ssh_key-1.pub
+        - your_ssh_key-2.pub
+        - your_ssh_key-3.pub
+      ignore_errors: yes  
     
     - name: Permanently remove SWAP from /etc/fstab
       ansible.builtin.lineinfile:
