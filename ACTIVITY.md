@@ -213,6 +213,7 @@ Created PR: https://github.com/remla25-team14/operation/pull/42
 
 -- Ilma Jaganjac --
 Created PR: https://github.com/remla25-team14/operation/pull/44
+Approved PR: https://github.com/remla25-team14/operation/pull/33#pullrequestreview-2959191516
 
 -- Reeve Lorena: --
 Created PR: https://github.com/remla25-team14/app/pull/12
