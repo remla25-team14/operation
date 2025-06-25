@@ -325,6 +325,7 @@ See [`ACTIVITY.md`](./ACTIVITY.md) for detailed contribution history and pull re
 
 If you encounter issues or have questions:
 
+
 1. Check individual repo documentation
 2. Visit `/metrics` for health info
 3. Use `docker-compose logs [service-name]`

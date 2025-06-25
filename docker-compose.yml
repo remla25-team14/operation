@@ -1,7 +1,7 @@
 services:
   # Frontend + Backend App
   app:
-    image: ghcr.io/remla25-team14/app/app:1.0.0
+    image: ghcr.io/remla25-team14/app/app:1.0.1
     pull_policy: always
     ports:
       - "5001:5001"
