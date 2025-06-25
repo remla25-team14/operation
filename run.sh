@@ -24,6 +24,15 @@ if [ ! -f "./secrets/github_token.txt" ]; then
     echo "your_github_token_here" > secrets/github_token.txt
 fi
 
+# If MODEL_SERVICE_IMAGE is set, extract the tag and set MODEL_SERVICE_IMAGE_TAG
+if [ -n "$MODEL_SERVICE_IMAGE" ]; then
+    TAG="${MODEL_SERVICE_IMAGE##*:}"
+    if [ "$TAG" = "$MODEL_SERVICE_IMAGE" ]; then
+        TAG="latest"
+    fi
+    export MODEL_SERVICE_IMAGE_TAG="$TAG"
+fi
+
 # Start the application
 echo "Launching services..."
 docker compose up --build 

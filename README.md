@@ -56,7 +56,7 @@ The REMLA system consists of six interconnected repositories that work together 
 
 By default, the system is configured to use the `latest` version for both the `model-service` image and the trained model artifact. The application will automatically fetch the latest release from the `model-training` repository.
 
-### Overriding Default Versions (Optional)
+#### Overriding Default Versions (Optional)
 
 You can override the default versions by setting environment variables before running the system. This is useful for testing specific releases.
 
@@ -70,19 +70,22 @@ export TRAINED_MODEL_VERSION=v0.1.3
 
 **2. Override Model Service Image:**
 
-To use a specific `model-service` Docker image, set the `MODEL_SERVICE_IMAGE_TAG` variable. This version must match an image tag on GHCR.
+To use a specific `model-service` Docker image, set the `MODEL_SERVICE_IMAGE` variable. This version must match an image tag on GHCR, like `v0.1.6`.
 
 ```bash
-export MODEL_SERVICE_IMAGE_TAG=v0.1.6-rc.1
+export MODEL_SERVICE_IMAGE=ghcr.io/remla25-team14/model-service:v0.1.6
 ```
 
 After launching the system with overrides, you can verify the versions being used by checking the labels in the web application UI.
 
 #### 1. Environment Setup
 
-Create a `.env` file in the project root:
+Create a folder inside of `operations` named `secrets`, with a text file where you put your PAT:
 
-```env
+```bash
+cd /operations
+mkdir -p secrets
+touch github_token.txt
 GITHUB_TOKEN=ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
 
@@ -103,9 +106,8 @@ GITHUB_TOKEN=ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 | Variable       | Description                      | Default/Example                   |
 | -------------- | -------------------------------- | --------------------------------- |
 | `GITHUB_TOKEN` | GitHub token for artifact access | Required                          |
-| `OWNER_REPO`   | Model training repository        | `remla25-team14/model-training`   |
-| `ARTIFACT_ID`  | Current model artifact ID        | `3053668556`                      |
-| `APP_VERSION`  | Application version              | Auto-loaded from `../app/VERSION` |
+| `MODEL_SERVICE_IMAGE` | Model service Docker image | `ghcr.io/remla25-team14/model-service:latest` |
+| `TRAINED_MODEL_VERSION` | Model artifact version | `latest` |
 
 ### Assignment 2: Kubernetes with Vagrant
 
@@ -145,9 +147,11 @@ This assignment involves deploying the application to a Kubernetes cluster and c
    ```
 
 2. **Edit `/etc/hosts`**:
-   Add the following line:
+   Add the following entries (use the ingress IP address shown by `kubectl get ingress`):
    ```bash
-   127.0.0.1 sentiment.local grafana.sentiment.local prometheus.sentiment.local
+   192.168.49.2 sentiment.local
+   192.168.49.2 grafana.sentiment.local
+   192.168.49.2 prometheus.sentiment.local
    ```
 3. **Create GitHub Token Secret**:
 
@@ -176,27 +180,34 @@ This assignment involves deploying the application to a Kubernetes cluster and c
      --set traffic.abTesting.enabled=false
    ```
 
-6. **Verify Installation**:
+#### Overriding Model Service Version (Kubernetes/Helm)
 
+You can override both the model service image and trained model version for Kubernetes deployments. Both overrides must be set together to ensure consistency:
+
+```bash
+helm install mysentiment ./sentiment-analysis \
+  --set modelServiceOverride.enabled=true \
+  --set modelServiceOverride.image=ghcr.io/remla25-team14/model-service:v0.1.6 \
+  --set modelServiceOverride.imageTag=v0.1.6 \
+  --set modelServiceOverride.trainedModelVersion=v0.1.3 \
+  --set prefix=mysentiment \
+  --set ingress.enabled=true \
+  --set ingress.controller=nginx \
+  --set ingress.className=nginx \
+  --set ingress.host=sentiment.local
+```
+
+Note: Always set both `modelServiceOverride.image` and `modelServiceOverride.imageTag` to ensure the container image and environment variables are consistent.
+
+After deployment, you can verify the versions:
+1. Check the pod's image and environment variables:
    ```bash
-   kubectl get pods
-   kubectl get svc
-   kubectl get ingress
+   kubectl describe pod <model-pod-name>
    ```
-
-7. **Access the Services**:
-
-   * Application: [http://sentiment.local](http://sentiment.local)
-   * Grafana: [http://grafana.sentiment.local](http://grafana.sentiment.local)
-
-8. **Grafana Credentials**:
-
+2. Access the model service's version endpoint:
    ```bash
-   kubectl get secret myprom-grafana -o jsonpath="{.data.admin-password}" | base64 --decode; echo
+   curl http://sentiment.local/version
    ```
-
-   * Username: `admin`
-   * Password: output from above
 
 ### Assignment 4: ML Configuration Management & ML Testing
 
@@ -204,15 +215,14 @@ Documentation coming soon / maintained in separate repo(s).
 
 ### Assignment 5: Istio Service Mesh
 
-This assignment sets up advanced traffic routing (A/B testing) and rate limiting using Istio.
+This assignment sets up advanced traffic routing (A/B testing) using Istio's service mesh capabilities.
 
 #### Steps:
 
-1. **Start Minikube**:
+1. **Start Minikube** (if using minikube):
 
    ```bash
    minikube start --cpus=4 --memory=8g
-   minikube addons enable ingress
    ```
 
 2. **Install Istio**:
@@ -221,66 +231,68 @@ This assignment sets up advanced traffic routing (A/B testing) and rate limiting
    curl -L https://istio.io/downloadIstio | sh -
    cd istio-*/
    export PATH="$PWD/bin:$PATH"
-   istioctl install
+   istioctl install --set profile=demo -y
    kubectl label namespace default istio-injection=enabled
    ```
 
-3. **Edit `/etc/hosts`**:
+3. **Install Prometheus Stack**:
 
    ```bash
-   127.0.0.1 sentiment.local grafana.sentiment.local prometheus.sentiment.local
+   helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+   helm repo update
+   helm install myprom prometheus-community/kube-prometheus-stack
    ```
 
-4. **Install Prometheus Stack**:
-   (Same as in Assignment 3)
-
-5. **Create GitHub Token Secret**:
+4. **Create GitHub Token Secret**:
 
    ```bash
-   export KUBECONFIG="$(pwd)/ansible/.kube/config"
-   ```
-   To check if this worked, you can run the following command on your host machine:
-   ```bash
-   kubectl get nodes
+   kubectl create secret generic github-token --from-literal=GITHUB_TOKEN=<your_github_token>
    ```
 
-   kubectl create secret generic github-token --from-literal=GITHUB_TOKEN=<your github PAT token>
-   ```
-
-6. **Install Helm Chart with Istio Options**:
+5. **Install Helm Chart with Istio and A/B Testing**:
 
    ```bash
-   helm install mysentiment ./sentiment-analysis \
-     --set prefix=mysentiment \
-     --set ingress.controller=istio \
+   helm upgrade --install sentiment ./sentiment-analysis \
      --set traffic.abTesting.enabled=true \
-     --set rateLimit.enabled=true
+     --set ingress.controller=istio \
+     --set app.images.v2=ghcr.io/remla25-team14/app/app:v2-feedback-experiment
    ```
 
-7. **Check Istio Resources**:
+6. **Access the Application**:
 
+   The application will be available at:
+   - Main application: http://sentiment.local:32514
+   - Grafana dashboard: http://grafana.sentiment.local:32514
+   - Prometheus: http://prometheus.sentiment.local:32514
+
+   Note: The port number (32514) might be different in your setup. You can find the correct port with:
    ```bash
-   kubectl get virtualservice mysentiment-app -o yaml
-   kubectl get destinationrule mysentiment-app -o yaml
+   kubectl get svc -n istio-system istio-ingressgateway -o jsonpath='{.spec.ports[?(@.name=="http2")].nodePort}'
    ```
 
-8. **Simulate A/B Testing**:
+7. **Verify A/B Testing**:
 
-   ```bash
-   curl -H "x-user-experiment: A" http://sentiment.local/
-   curl -H "x-user-experiment: B" http://sentiment.local/
-   ```
+   The traffic is automatically split:
+   - 90% of traffic goes to v1
+   - 10% of traffic goes to v2
 
-9. **Access Grafana Dashboard**:
+   You can verify this by:
+   - Checking the pods: `kubectl get pods -l app=sentiment-sentiment-chart-app --show-labels`
+   - Viewing the VirtualService configuration: `kubectl get virtualservice sentiment-sentiment-chart-vs -o yaml`
+   - Monitoring traffic distribution in Grafana
+
+8. **Access Grafana Dashboard**:
 
    ```bash
    kubectl get secret myprom-grafana -o jsonpath="{.data.admin-password}" | base64 --decode; echo
    ```
 
-   Navigate to [http://grafana.sentiment.local](http://grafana.sentiment.local)
+   Navigate to http://grafana.sentiment.local:32514
+   - Username: `admin`
+   - Password: (retrieved from above command)
+   - Look for the "Sentiment Analysis A/B Testing" dashboard
 
-   * Username: `admin`
-   * Password: retrieved value
+The A/B testing setup automatically splits traffic between v1 and v2 versions of your application, allowing you to gradually roll out new features and monitor their performance through Grafana dashboards.
 
 ---
 
