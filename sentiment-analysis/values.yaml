@@ -59,6 +59,7 @@ prometheus:
   prometheusSpec:
     externalUrl: http://prometheus.{{ .Values.ingress.host }}
     routePrefix: /
+  release: myprom
 
 grafana:
   enabled: true
@@ -95,3 +96,12 @@ rateLimit:
   fillInterval: "60s"
   blockDuration: "60s"
 
+alert:
+  enabled: false
+  threshold: 0.25
+  ratePerMin: 15
+  # SMTP credentials (do not put real pwd here, use --set alert.smtpPass=... when deploying）
+  smtpFrom: your-team@gmail.com
+  smtpUser: your-team@gmail.com
+  smtpPass: ""
+  receiverEmail: your-devs@example.com

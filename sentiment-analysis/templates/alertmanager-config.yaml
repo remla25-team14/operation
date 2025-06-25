@@ -1,0 +1,23 @@
+{{- if .Values.alert.enabled }}
+apiVersion: v1
+kind: Secret
+metadata:
+  name: alertmanager-{{ .Release.Name }}-extra-config
+  labels:
+    app: alertmanager
+type: Opaque
+stringData:
+  alertmanager.yaml: |
+    global:
+      smtp_smarthost: 'smtp.gmail.com:587'
+      smtp_from: '{{ .Values.alert.smtpFrom }}'
+      smtp_auth_username: '{{ .Values.alert.smtpUser }}'
+      smtp_auth_password: '{{ .Values.alert.smtpPass }}'
+    route:
+      receiver: 'email-team'
+    receivers:
+    - name: 'email-team'
+      email_configs:
+      - to: '{{ .Values.alert.receiverEmail }}'
+        send_resolved: true
+{{- end }}
