@@ -237,6 +237,13 @@ This assignment sets up advanced traffic routing (A/B testing) and rate limiting
 5. **Create GitHub Token Secret**:
 
    ```bash
+   export KUBECONFIG="$(pwd)/ansible/.kube/config"
+   ```
+   To check if this worked, you can run the following command on your host machine:
+   ```bash
+   kubectl get nodes
+   ```
+
    kubectl create secret generic github-token --from-literal=GITHUB_TOKEN=<your github PAT token>
    ```
 
@@ -305,6 +312,7 @@ See [`ACTIVITY.md`](./ACTIVITY.md) for detailed contribution history and pull re
 ## Support
 
 If you encounter issues or have questions:
+
 
 1. Check individual repo documentation
 2. Visit `/metrics` for health info
