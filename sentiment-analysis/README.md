@@ -319,7 +319,9 @@ By default, the chart uses:
 ```yaml
 traffic:
   abTesting:
-    matchHeader: x-user-experiment
+    enabled: true
+    routingMethod: header          
+    headerName: version             
 ```
 
 To change the header name you can either change it in the `chart.yaml` file, like above or you can set it in the Helm Cli like below
@@ -327,24 +329,21 @@ To change the header name you can either change it in the `chart.yaml` file, lik
 ```bash
 helm upgrade --install mysentiment ./sentiment-analysis \
   --set prefix=mysentiment \
-  --set traffic.abTesting.enabled=true \
-  --set traffic.abTesting.matchHeader=x-ab-group \
-  --set traffic.abTesting.experimentValue=B \
-  --set traffic.abTesting.controlValue=A
+  --set traffic.abTesting.enabled=true
 ```
 
 Once deployed, test using your new header name:
 
-No header or `x-ab-group: A`
+No header or `version: A`
 
 ```bash
 curl http://<hostname>/
 ```
 
-With x-ab-group: B
+With version: B
 
 ```bash
-curl curl -H "x-ab-group: B" http://<hostname>/
+curl curl -H "version: B" http://<hostname>/
 ```
 ---
 # Note for the Reviewers

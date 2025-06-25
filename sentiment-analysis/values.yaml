@@ -57,9 +57,7 @@ ingress:
 
 prometheus:
   prometheusSpec:
-    externalUrl: http://prometheus.{{ .Values.ingress.host }}
-    routePrefix: /
-  release: myprom
+    externalUrl: http://prometheus.{{ .Values.ingress.host }}    routePrefix: /
 
 grafana:
   enabled: true
@@ -78,9 +76,17 @@ grafana:
 traffic:
   abTesting:
     enabled: true
-    matchHeader: x-user-experiment
-    controlValue: A
-    experimentValue: B
+    routingMethod: header           # Use header-based routing only
+    headerName: version             # Header name to check for routing
+    versions:
+      v1:
+        headerValue: v1             # Route to v1 when header "version: v1"
+        subset: v1
+        fallback: true              # This is the default when no header is present
+      v2:
+        headerValue: v2           
+        subset: v2
+        fallback: false
     appVersions:
       - v1
       - v2
@@ -94,8 +100,7 @@ rateLimit:
   maxTokens: 10
   tokensPerFill: 10
   fillInterval: "60s"
-  blockDuration: "60s"
-
+  
 alert:
   enabled: false
   threshold: 0.25
@@ -105,3 +110,5 @@ alert:
   smtpUser: your-team@gmail.com
   smtpPass: ""
   receiverEmail: your-devs@example.com
+
+

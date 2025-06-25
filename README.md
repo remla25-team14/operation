@@ -440,14 +440,9 @@ This assignment sets up advanced traffic routing (A/B testing) using Istio's ser
 6. **Access the Application**:
 
    The application will be available at:
-   - Main application: http://sentiment.local:32514
-   - Grafana dashboard: http://grafana.sentiment.local:32514
-   - Prometheus: http://prometheus.sentiment.local:32514
-
-   Note: The port number (32514) might be different in your setup. You can find the correct port with:
-   ```bash
-   kubectl get svc -n istio-system istio-ingressgateway -o jsonpath='{.spec.ports[?(@.name=="http2")].nodePort}'
-   ```
+   - Main application: http://sentiment.local
+   - Grafana dashboard: http://grafana.sentiment.local
+   - Prometheus: http://prometheus.sentiment.local
 
 7. **Verify A/B Testing**:
 
@@ -459,6 +454,21 @@ This assignment sets up advanced traffic routing (A/B testing) using Istio's ser
    - Checking the pods: `kubectl get pods -l app=sentiment-sentiment-chart-app --show-labels`
    - Viewing the VirtualService configuration: `kubectl get virtualservice sentiment-sentiment-chart-vs -o yaml`
    - Monitoring traffic distribution in Grafana
+   - Or by using curl using the following instructions
+   Once deployed, test using your new header name:
+
+   No header or `version: A`
+
+   ```bash
+   curl http://<hostname>/
+   ```
+
+   With version: B
+
+   ```bash
+   curl -H "version: B" http://<hostname>/
+   ```
+
 
 8. **Access Grafana Dashboard**:
 
