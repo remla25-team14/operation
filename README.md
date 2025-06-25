@@ -246,7 +246,7 @@ This assignment sets up advanced traffic routing (A/B testing) using Istio's ser
 4. **Create GitHub Token Secret**:
 
    ```bash
-   kubectl create secret generic github-token --from-literal=GITHUB_TOKEN=<your github PAT token>
+   kubectl create secret generic github-token --from-literal=GITHUB_TOKEN=<your_github_token>
    ```
 
 5. **Install Helm Chart with Istio and A/B Testing**:
