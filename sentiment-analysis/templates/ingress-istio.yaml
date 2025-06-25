@@ -18,7 +18,7 @@ spec:
         - "grafana.{{ .Values.ingress.host }}"
 
 ---
-## 2) VirtualService for the app (“sentiment.local”)
+## 2) VirtualService with Header Override + Weight-based Fallback
 apiVersion: networking.istio.io/v1beta1
 kind: VirtualService
 metadata:
@@ -30,6 +30,38 @@ spec:
     - {{ include "sentiment-chart.fullname" . }}-gateway
   http:
     {{- if .Values.traffic.abTesting.enabled }}
+    # Priority 1: Metrics endpoint (highest priority)
+    - match:
+      - uri:
+          prefix: /metrics
+      route:
+      - destination:
+          host: {{ include "sentiment-chart.fullname" . }}-app-service
+          port:
+            number: {{ .Values.app.servicePort }}
+    
+    # Priority 2: Route to version A when header "version: A"
+    - match:
+      - headers:
+          version:
+            exact: A
+      route:
+      - destination:
+          host: {{ include "sentiment-chart.fullname" . }}-app-service
+          subset: v1
+    
+    # Priority 3: Route to version B when header "version: B"
+    - match:
+      - headers:
+          version:
+            exact: B
+      route:
+      - destination:
+          host: {{ include "sentiment-chart.fullname" . }}-app-service
+          subset: v2
+    
+    # Priority 4: Default weight-based routing with sticky sessions
+    # This applies when no version header is present
     - match:
       - uri:
           prefix: /
@@ -37,12 +69,13 @@ spec:
       - destination:
           host: {{ include "sentiment-chart.fullname" . }}-app-service
           subset: v1
-        weight: 90
+        weight: {{ .Values.traffic.abTesting.versions.v1.weight | default 90 }}
       - destination:
           host: {{ include "sentiment-chart.fullname" . }}-app-service
           subset: v2
-        weight: 10
+        weight: {{ .Values.traffic.abTesting.versions.v2.weight | default 10 }}
     {{- else }}
+    # Standard routing when A/B testing is disabled
     - match:
         - uri:
             prefix: /metrics
@@ -60,6 +93,7 @@ spec:
             port:
               number: {{ .Values.app.servicePort }}
     {{- end }}
+
 
 ---
 ## 3) VirtualService for “prometheus.sentiment.local”
