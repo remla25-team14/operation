@@ -1,123 +1,139 @@
-# Continuous Experimentation: Sentiment Analysis Model Comparison
+# Continuous Experimentation: Button Placement Analysis
 
 ## Experiment Overview
 
-We are conducting an A/B test to compare two versions of our sentiment analysis model service. The experiment aims to evaluate whether our new model version (v2) provides better accuracy and user satisfaction compared to the current version (v1).
+We are conducting an A/B test to evaluate the impact of the "Analyze Sentiment" button placement on user engagement. The experiment aims to determine if placing the button at the top of the interface increases user interaction compared to the original bottom placement.
 
 ### Base Design vs. New Design
 
 **Base Design (v1)**:
-- Uses the original sentiment analysis model
-- Basic bag-of-words (BoW) vectorization
-- Standard classification threshold
+- Original application layout
+- "Analyze Sentiment" button placed at the bottom
+- Standard user flow where users need to scroll to submit
+
+  ![Deployment Topology Diagram](images/v1_picture.png)
 
 **New Design (v2)**:
-- Enhanced sentiment analysis model with user feedback incorporation
-- Improved text preprocessing
-- Optimized classification threshold based on historical data
+- Identical functionality to v1
+- "Analyze Sentiment" button relocated to the top
+- Immediate visibility of the action button
+  
+  ![Deployment Topology Diagram](images/v2_picture.png)
+
 
 ## Hypothesis
 
-Our falsifiable hypothesis is that the new model version (v2) will:
-1. Provide more accurate sentiment predictions (measured through user feedback)
-2. Maintain or improve response times
-3. Show a more balanced distribution of positive/negative predictions
+Our primary hypothesis is that placing the "Analyze Sentiment" button at the top of the interface will increase the button's click-through rate (CTR). We believe that improved button visibility will lead to higher user engagement.
+
+Specifically, we hypothesize that:
+- Users will be more likely to submit text for analysis when the button is immediately visible
+- The time-to-first-click will be lower in v2 due to easier button discovery
 
 ## Metrics and Decision Process
 
-We are collecting the following metrics through Prometheus and visualizing them in Grafana:
+We are tracking the following metrics through Prometheus and visualizing them in Grafana:
 
-1. **Positive Sentiment Ratio by Version**
-   - Tracks the ratio of positive to total predictions for each version
-   - Helps identify if one version is biased towards positive/negative predictions
-   - Expected: v2 should show a more balanced ratio closer to historical data
+1. **Primary Metric - Button Click-through Rate (CTR)**
+   - Calculated as: (Number of Analyze Button Clicks / Number of Page Views) * 100
+   - Tracked separately for v1 and v2
+   - Measured using the custom metric: `sentiment_button_clicks_total{version="v1|v2"}`
+   - Page views tracked using: `page_views_total{version="v1|v2"}`
 
-2. **Model Response Time**
-   - Measures the latency of sentiment predictions
-   - Critical for user experience
-   - Requirement: v2 should not increase average response time by more than 10%
-
-3. **Sentiment Predictions by Version**
-   - Shows the distribution of predictions (positive/negative) for each version
-   - Helps identify potential biases or shifts in prediction patterns
-   - Expected: v2 should maintain a reasonable distribution based on domain knowledge
-
-4. **Model Accuracy by Version**
-   - Based on user feedback (correct/incorrect predictions)
-   - Direct measure of model performance
-   - Success Criteria: v2 should show at least 5% improvement in accuracy
-
-## Decision Making Process
-
-The experiment will run for a minimum of 2 weeks, with traffic split 50/50 between versions. The decision to adopt v2 will be based on:
-
-1. **Primary Metric**: User-reported accuracy
-   - Must show statistically significant improvement (p < 0.05)
-   - Minimum 5% absolute improvement over v1
-
-2. **Secondary Metrics**:
-   - Response time: Must not degrade by more than 10%
-   - Sentiment ratio: Should be within ±10% of historical baseline
-   - No significant increase in error rates or failures
-
-3. **Monitoring Process**:
-   - Daily review of Grafana dashboard metrics
-   - Weekly statistical significance testing
-   - Continuous monitoring of system health and error rates
+2. **Secondary Metrics**
+   - **Time to First Click**: Average time between page load and first button click
+   - **Session Engagement**: Number of analyses per user session
+   - **Bounce Rate**: Percentage of users who leave without clicking the button
 
 ## Implementation Details
 
 The experiment is implemented using:
-- Istio for traffic splitting (based on request header `x-user-experiment`)
+- Istio for traffic splitting (90/10 distribution between v1 and v2)
 - Prometheus for metrics collection
 - Grafana for visualization and monitoring
-- Custom metrics in our application code
 
-### Traffic Splitting Configuration
+### Traffic Management Configuration
 ```yaml
 traffic:
   abTesting:
     enabled: true
-    matchHeader: x-user-experiment
-    controlValue: A
-    experimentValue: B
     appVersions:
-      - v1
-      - v2
-    modelVersions:
-      - v1
-      - v2
+      - v1  # Original button placement
+      - v2  # Top button placement
+    weights:
+      - 90  # 90% to v1
+      - 10  # 10% to v2
 ```
 
 ### Metrics Implementation
-- Application-level metrics for sentiment analysis
-- Response time tracking
-- User feedback collection
-- Error rate monitoring
+
+We've added the following custom metrics to track button interaction:
+
+```python
+# Button click counter
+button_clicks = Counter(
+    'sentiment_button_clicks_total',
+    'Total number of analyze button clicks',
+    ['version']
+)
+
+# Page views counter
+page_views = Counter(
+    'page_views_total',
+    'Total number of page views',
+    ['version']
+)
+
+# Time to first click histogram
+time_to_first_click = Histogram(
+    'time_to_first_click_seconds',
+    'Time from page load to first button click',
+    ['version'],
+    buckets=[1, 2, 5, 10, 30, 60, float("inf")]
+)
+```
 
 ## Dashboard Visualization
 
-Our Grafana dashboard (search for Sentiment Analysis A/B Testing) provides real-time visualization of:
-- Sentiment prediction distributions
-- Response time comparisons
-- Accuracy metrics based on user feedback
-- Error rates and system health
-
-![Grafana Dashboard for Sentiment Analysis A/B Testing](../images/grafana_experiment.png)
+Our Grafana dashboard (Sentiment Analysis A/B Testing) provides real-time visualization of:
+- Button CTR comparison between versions
+- Time-to-first-click distribution
+- Page views and engagement metrics
+- Conversion funnel analysis
 
 The dashboard shows:
-- Top Left: Positive Sentiment Ratio by Version - tracking the proportion of positive predictions
-- Top Right: Model Response Time - monitoring latency and performance
-- Bottom Left: Sentiment Predictions by Version - showing the distribution of predictions
-- Bottom Right: Model Accuracy by Version - displaying feedback-based accuracy metrics
+- Top Left: Real-time CTR comparison
+- Top Right: Time to first click distribution
+- Bottom Left: Page views by version
+- Bottom Right: Conversion funnel
+
+## Success Criteria
+
+We will consider the experiment successful if:
+1. V2 shows a statistically significant increase in CTR 
+2. The improvement in CTR is at least 15% relative to v1
+3. Time to first click shows measurable improvement
+4. No negative impact on overall user engagement metrics
+
+## Monitoring and Duration
+
+- Initial rollout: 10% of traffic to v2
+- Experiment duration: 2 weeks minimum
+- Daily monitoring of metrics
+- Statistical significance testing at 1-week mark
 
 ## Rollback Plan
 
-If any of the following conditions are met, we will immediately rollback to v1:
-1. Error rate increases by more than 5%
-2. Response time degrades by more than 20%
-3. Critical bugs or security issues are discovered
+We will immediately rollback to 100% v1 if:
+1. Significant technical issues arise
+2. User engagement metrics show dramatic negative trends
+3. Any security or performance issues are detected
 
-## Results and Conclusions
+## Next Steps
 
-[To be filled after the experiment completion] 
+Based on the results of this experiment, we will:
+1. If successful: Gradually increase traffic to v2 and eventually make it the new default
+2. If unsuccessful: Analyze user behavior data to understand why the new placement didn't improve engagement
+3. Document learnings and plan future UI optimization experiments
+
+
+Current Traffic Split: 90% v1, 10% v2
