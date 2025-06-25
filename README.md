@@ -215,15 +215,14 @@ Documentation coming soon / maintained in separate repo(s).
 
 ### Assignment 5: Istio Service Mesh
 
-This assignment sets up advanced traffic routing (A/B testing) and rate limiting using Istio.
+This assignment sets up advanced traffic routing (A/B testing) using Istio's service mesh capabilities.
 
 #### Steps:
 
-1. **Start Minikube**:
+1. **Start Minikube** (if using minikube):
 
    ```bash
    minikube start --cpus=4 --memory=8g
-   minikube addons enable ingress
    ```
 
 2. **Install Istio**:
@@ -232,59 +231,68 @@ This assignment sets up advanced traffic routing (A/B testing) and rate limiting
    curl -L https://istio.io/downloadIstio | sh -
    cd istio-*/
    export PATH="$PWD/bin:$PATH"
-   istioctl install
+   istioctl install --set profile=demo -y
    kubectl label namespace default istio-injection=enabled
    ```
 
-3. **Edit `/etc/hosts`**:
+3. **Install Prometheus Stack**:
 
    ```bash
-   127.0.0.1 sentiment.local grafana.sentiment.local prometheus.sentiment.local
+   helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+   helm repo update
+   helm install myprom prometheus-community/kube-prometheus-stack
    ```
 
-4. **Install Prometheus Stack**:
-   (Same as in Assignment 3)
-
-5. **Create GitHub Token Secret**:
+4. **Create GitHub Token Secret**:
 
    ```bash
    kubectl create secret generic github-token --from-literal=GITHUB_TOKEN=<your github PAT token>
    ```
 
-6. **Install Helm Chart with Istio Options**:
+5. **Install Helm Chart with Istio and A/B Testing**:
 
    ```bash
-   helm install mysentiment ./sentiment-analysis \
-     --set prefix=mysentiment \
-     --set ingress.controller=istio \
+   helm upgrade --install sentiment ./sentiment-analysis \
      --set traffic.abTesting.enabled=true \
-     --set rateLimit.enabled=true
+     --set ingress.controller=istio \
+     --set app.images.v2=ghcr.io/remla25-team14/app/app:v2-feedback-experiment
    ```
 
-7. **Check Istio Resources**:
+6. **Access the Application**:
 
+   The application will be available at:
+   - Main application: http://sentiment.local:32514
+   - Grafana dashboard: http://grafana.sentiment.local:32514
+   - Prometheus: http://prometheus.sentiment.local:32514
+
+   Note: The port number (32514) might be different in your setup. You can find the correct port with:
    ```bash
-   kubectl get virtualservice mysentiment-app -o yaml
-   kubectl get destinationrule mysentiment-app -o yaml
+   kubectl get svc -n istio-system istio-ingressgateway -o jsonpath='{.spec.ports[?(@.name=="http2")].nodePort}'
    ```
 
-8. **Simulate A/B Testing**:
+7. **Verify A/B Testing**:
 
-   ```bash
-   curl -H "x-user-experiment: A" http://sentiment.local/
-   curl -H "x-user-experiment: B" http://sentiment.local/
-   ```
+   The traffic is automatically split:
+   - 90% of traffic goes to v1
+   - 10% of traffic goes to v2
 
-9. **Access Grafana Dashboard**:
+   You can verify this by:
+   - Checking the pods: `kubectl get pods -l app=sentiment-sentiment-chart-app --show-labels`
+   - Viewing the VirtualService configuration: `kubectl get virtualservice sentiment-sentiment-chart-vs -o yaml`
+   - Monitoring traffic distribution in Grafana
+
+8. **Access Grafana Dashboard**:
 
    ```bash
    kubectl get secret myprom-grafana -o jsonpath="{.data.admin-password}" | base64 --decode; echo
    ```
 
-   Navigate to [http://grafana.sentiment.local](http://grafana.sentiment.local)
+   Navigate to http://grafana.sentiment.local:32514
+   - Username: `admin`
+   - Password: (retrieved from above command)
+   - Look for the "Sentiment Analysis A/B Testing" dashboard
 
-   * Username: `admin`
-   * Password: retrieved value
+The A/B testing setup automatically splits traffic between v1 and v2 versions of your application, allowing you to gradually roll out new features and monitor their performance through Grafana dashboards.
 
 ---
 
