@@ -42,6 +42,7 @@ This Helm chart supports:
 - Istio or NGINX ingress controllers
 - A/B testing (canary releases) using Istio routing with Sticky sessions.
 - Prometheus/Grafana monitoring
+- Prometheus/Grafana monitoring (optional Alertmanager e-mail alerts)
 - Versioned app and model deployments
 - Configurable GitHub token for private artifact access
 
@@ -96,6 +97,12 @@ This Helm chart supports:
 | `monitoring.release`      | string   | Helm release name of the Prometheus stack        |
 | `prometheus.prometheusSpec.externalUrl` | string | External URL of Prometheus |
 | `prometheus.prometheusSpec.routePrefix` | string | Route prefix if behind a reverse proxy           |
+| `alert.enabled`                 | bool | Turn alerting resources on/off                                 |
+| `alert.threshold`               | float| Request-rate threshold used in alert rule                      |
+| `alert.smtpFrom` / `smtpUser`   | str  | Gmail (or other SMTP) user                                      |
+| `alert.smtpPass`               | str  | **App Password** – inject with `--set`                          |
+| `alert.receiverEmail`           | str  | Destination address for notifications                        |
+| `prometheus.release`            | str  | Must match kube-prometheus-stack release name                   |
 
 #### Grafana
 
@@ -247,6 +254,16 @@ helm install version2 ./sentiment-analysis --set prefix=version2
 ```
 
 In the console, you will see the various endpoints that the application has, including the grafana dashboard and the prometheus dashboard.
+
+### Enable e-mail alerts (optional)
+```bash
+helm upgrade --install mysentiment ./sentiment-analysis \
+  --set alert.enabled=true \
+  --set alert.smtpUser=myapp@gmail.com \
+  --set alert.smtpFrom=myapp@gmail.com \
+  --set alert.smtpPass="$GMAIL_APP_PASSWORD" \
+  --set alert.receiverEmail=dev-team@example.com
+```
 
 ## Verify Installation
 

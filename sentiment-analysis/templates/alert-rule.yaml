@@ -1,0 +1,20 @@
+{{- if .Values.alert.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: high-request-rate
+  labels:
+    release: {{ .Values.prometheus.release }}
+spec:
+  groups:
+  - name: app.rules
+    rules:
+    - alert: HighRequestRate
+      expr: rate(sentiment_predictions_total[1m]) > {{ .Values.alert.threshold }}
+      for: 2m
+      labels:
+        severity: warning
+      annotations:
+        summary: "High request rate detected"
+        description: "The sentiment app received more than {{ .Values.alert.ratePerMin }} requests per minute for the last 2 minutes."
+{{- end }}
