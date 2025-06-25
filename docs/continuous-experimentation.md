@@ -92,7 +92,7 @@ time_to_first_click = Histogram(
 )
 ```
 
-## Dashboard Visualization
+## Dashboard Visualization (not working properly)
 
 Our Grafana dashboard (Sentiment Analysis A/B Testing) provides real-time visualization of:
 - Button CTR comparison between versions
@@ -105,6 +105,8 @@ The dashboard shows:
 - Top Right: Time to first click distribution
 - Bottom Left: Page views by version
 - Bottom Right: Conversion funnel
+
+Disclaimer: At the moment of submission, the grafana dashboard does not properly fetch the metrics anymore.
 
 ## Success Criteria
 
