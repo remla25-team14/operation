@@ -240,5 +240,5 @@ Approved PR: https://github.com/remla25-team14/operation/pull/46
 Created PR: https://github.com/remla25-team14/model-service/pull/12
 
 -- Zeyu Fan --
-Created PR: https://github.com/remla25-team14/operation/pull/49
+Created PR: https://github.com/remla25-team14/operation/pull/49 (Addresses A5)
 Approved PR: https://github.com/remla25-team14/operation/pull/47
