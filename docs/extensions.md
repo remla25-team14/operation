@@ -10,7 +10,13 @@ Some of our deployment pipelines **stop at the image‑publish stage**. Many Kub
 $ kubectl apply -f kubernetes/    # developer / CI operator action
 ```
 
-- The manifests are **not parameterised** (e.g., image tags or canary weights are hard‑coded).
+Although the core micro-services are already packaged in a Helm chart (`sentiment-analysis/`), the chart is still applied **manually**:
+
+```text
+helm upgrade --install prod ./sentiment-analysis -f values-prod.yaml   # operator action
+```
+
+- The chart is parameterised via `values.yaml`, but weights/tags are often patched **locally** instead of commiting the change to Git.
 - The cluster state is **imperative**, i.e., *kubectl* pushes changes; the cluster does **not pull** the desired state.
 - There is **no automatic rollback** or drift detection.
 - Promotion from *staging* to *production* requires copy‑pasting YAML or changing namespaces by hand.
@@ -53,12 +59,27 @@ flowchart LR
 
 As shown in Figure 1, The developer commits the desired cluster state; GitHub stores it as the single source of truth. Argo CD watches for changes, renders the Helm chart, and synchronises the Kubernetes API server to match the committed manifests. Cluster health and synchronisation status are exported as metrics to Prometheus for monitoring and alerting.
 
-- **Helm Chart Migration** – Convert existing YAML into a chart (`charts/remla-all/`).
+- **Helm Chart Re-organisation** – Re-nest the existing `sentiment-analysis`
+  chart under a parent chart `charts/remla-all/`, so Argo CD can track a
+  single Application.
   - Parameters: `app.image.tag`, `modelService.image.tag`, Istio weights.
 - **Argo CD Application CR** tracks the Helm release in *prod* namespace.
 - **ApplicationSet** pattern for multi‑environment (optional future extension).
 
-### 2.2 Workflow Changes
+### 2.2 Why Argo CD on top of GitHub Actions?
+| Role | GitHub Actions (CI) | Argo CD (CD) |
+|------|--------------------|--------------|
+| **When** | build-time | run-time |
+| **Job** | compile, test, push images & Helm package | pull desired state from Git and sync cluster |
+| **Mode** | *push* — CI server runs `docker build` | *pull* — in-cluster controller runs `kubectl apply` |
+| **Rollback** | manual `helm rollback` | one-click `argocd app rollback` & drift auto-heal |
+| **Observability** | logs per workflow run | Prometheus metrics + UI diff view |
+
+Using Argo CD shifts deployment to a pull-based model, shortens
+commit-to-production time and provides auditable rollbacks, while our existing GitHub Actions pipeline continues to build and publish
+artifacts unchanged.
+
+### 2.3 Workflow Changes
 
 1. **Developer** opens PR containing *only* Helm value changes (e.g., set `modelService.image.tag: v1.3.0`).
 2. GH‑Actions still build & publish images – but *do not* run `kubectl`.
@@ -68,7 +89,7 @@ As shown in Figure 1, The developer commits the desired cluster state; GitHub st
    - Shows sync status (`Synced ✔︎ / OutOfSync ✖︎`) in its UI & via metrics.
 4. Rollback = `argocd app rollback remla-all <rev>` or simply reverting the commit.
 
-### 2.3 Advantages
+### 2.4 Advantages
 
 - **Single Source of Truth** – manifests versioned alongside code.
 - **Zero‑drift Guarantee** – Argo CD’s continuous reconciliation catches ad‑hoc `kubectl exec` changes.
