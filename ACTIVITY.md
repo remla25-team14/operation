@@ -218,6 +218,7 @@ Approved PR: https://github.com/remla25-team14/operation/pull/33#pullrequestrevi
 -- Reeve Lorena: --
 Created PR: https://github.com/remla25-team14/app/pull/12
 Created PR: https://github.com/remla25-team14/operation/pull/43
+Created PR: https://github.com/remla25-team14/operation/pull/48
 Merged PR: https://github.com/remla25-team14/app/pull/12
 Merged PR: https://github.com/remla25-team14/operation/pull/43
 Approved PR: https://github.com/remla25-team14/operation/pull/40

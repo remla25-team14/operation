@@ -2,15 +2,20 @@
 apiVersion: networking.istio.io/v1beta1
 kind: DestinationRule
 metadata:
-  name: {{ include "sentiment-chart.fullname" . }}-app-destination
+  name: {{ include "sentiment-chart.fullname" . }}-app-service
 spec:
   host: {{ include "sentiment-chart.fullname" . }}-app-service
+  trafficPolicy:
+    loadBalancer:
+      consistentHash:
+        useSourceIp: true
   subsets:
-  {{- range $version := .Values.traffic.abTesting.appVersions }}
-    - name: {{ $version }}
-      labels:
-        version: {{ $version }}
-  {{- end }}
+  - name: v1
+    labels:
+      version: v1
+  - name: v2
+    labels:
+      version: v2
 
 ---
 apiVersion: networking.istio.io/v1beta1
