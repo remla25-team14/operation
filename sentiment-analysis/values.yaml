@@ -57,7 +57,9 @@ ingress:
 
 prometheus:
   prometheusSpec:
-    externalUrl: http://prometheus.{{ .Values.ingress.host }}    routePrefix: /
+    externalUrl: http://prometheus.{{ .Values.ingress.host }}
+    routePrefix: /
+  release: myprom
 
 grafana:
   enabled: true
