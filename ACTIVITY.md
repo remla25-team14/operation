@@ -224,3 +224,7 @@ Merged PR: https://github.com/remla25-team14/operation/pull/43
 Approved PR: https://github.com/remla25-team14/operation/pull/40
 Approved PR: https://github.com/remla25-team14/operation/pull/42
 Approved PR: https://github.com/remla25-team14/operation/pull/44
+
+--Ciprian Bica --
+Approved PR: https://github.com/remla25-team14/operation/pull/46
+Created PR: https://github.com/remla25-team14/model-service/pull/12
