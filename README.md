@@ -196,7 +196,10 @@ helm install mysentiment ./sentiment-analysis \
   --set ingress.className=nginx \
   --set ingress.host=sentiment.local
 ```
-
+If using minikube start a tunnel by using
+```bash
+minikube tunnel
+```
 Note: Always set both `modelServiceOverride.image` and `modelServiceOverride.imageTag` to ensure the container image and environment variables are consistent.
 
 After deployment, you can verify the versions:
@@ -438,6 +441,12 @@ This assignment sets up advanced traffic routing (A/B testing) using Istio's ser
    ```
 
 6. **Access the Application**:
+
+   If using minikube start a tunnel by using
+
+    ```bash
+   minikube tunnel
+   ```
 
    The application will be available at:
    - Main application: http://sentiment.local
