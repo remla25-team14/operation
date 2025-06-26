@@ -209,6 +209,16 @@ Approved PR: https://github.com/remla25-team14/operation/pull/38
 Approved PR: https://github.com/remla25-team14/operation/pull/41
 Approved PR: https://github.com/remla25-team14/operation/pull/35
 Approved PR: https://github.com/remla25-team14/model-training/pull/14
+Approved PR: https://github.com/remla25-team14/operation/pull/49
+Approved PR: https://github.com/remla25-team14/operation/pull/41
+Approved PR: https://github.com/remla25-team14/operation/pull/43
+Approved PR: https://github.com/remla25-team14/operation/pull/48
+Approved PR: https://github.com/remla25-team14/model-training/pull/14
+Approved PR: https://github.com/remla25-team14/app/pull/12
+Created PR: https://github.com/remla25-team14/app/pull/13
+Created PR: https://github.com/remla25-team14/app/pull/11
+Created PR: https://github.com/remla25-team14/operation/pull/47
+Created PR: https://github.com/remla25-team14/operation/pull/46
 Created PR: https://github.com/remla25-team14/operation/pull/42
 
 -- Ilma Jaganjac --
